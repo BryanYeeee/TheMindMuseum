@@ -13,93 +13,53 @@ export const exhibitData = [
     segmentID: 'tile-0-0',
     position: POS[1],
     url: '',
-    dialogue: 'The Dawn of Man.'
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-0-0',
     position: POS[6],
     url: '',
-    dialogue: 'The Dawn of Man.'
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-0-0',
-    type: 'painting',
-    url: '',
     position: POS[2],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    type: 'painting',
+    url: '',
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-0-0',
-    type: 'painting',
-    url: '',
     position: POS[3],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    type: 'painting',
+    url: '',
+    name: 'Fragmented Reality',
+    description: 'Shards of perception assembled into a single, unsettling whole.',
   },
   {
     segmentID: 'tile-0-0',
-    type: 'painting',
-    url: '',
     position: POS[4],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    type: 'painting',
+    url: '',
+    name: 'The Bronze Warrior',
+    description: 'Cast in antiquity, this figure has outlasted every war it was forged to commemorate.',
   },
   {
     segmentID: 'tile-0-0',
+    position: POS[5],
     type: 'painting',
     url: '',
-    position: POS[5],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    name: 'The Bronze Warrior',
+    description: 'Cast in antiquity, this figure has outlasted every war it was forged to commemorate.',
   },
   {
     segmentID: 'tile-0-0',
     position: POS[7],
     url: '',
-    dialogue: 'The Dawn of Man.'
-  },
-
-  {
-    segmentID: 'tile-1-1',
-    position: POS[1],
-    url: '',
-    dialogue: 'The Dawn of Man.'
-  },
-  {
-    segmentID: 'tile-1-1',
-    position: POS[7],
-    url: '',
-    dialogue: 'The Dawn of Man.'
-  },
-  {
-    segmentID: 'tile-1-1',
-    position: POS[6],
-    url: '',
-    dialogue: 'The Dawn of Man.'
-  },
-  {
-    segmentID: 'tile-1-1',
-    type: 'painting',
-    url: '',
-    position: POS[2],
-    dialogue: "A digital reproduction of 'The Great Wave'."
-  },
-  {
-    segmentID: 'tile-1-1',
-    type: 'painting',
-    url: '',
-    position: POS[3],
-    dialogue: "A digital reproduction of 'The Great Wave'."
-  },
-  {
-    segmentID: 'tile-1-1',
-    type: 'painting',
-    url: '',
-    position: POS[4],
-    dialogue: "A digital reproduction of 'The Great Wave'."
-  },
-  {
-    segmentID: 'tile-1-1',
-    type: 'painting',
-    url: '',
-    position: POS[5],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    name: 'The Bronze Warrior',
+    description: 'Cast in antiquity, this figure has outlasted every war it was forged to commemorate.',
   }
 ]
