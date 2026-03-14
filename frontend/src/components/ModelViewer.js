@@ -83,6 +83,7 @@ export default function ModelViewer () {
 
           <Tileset
             setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }}
+            setNpcDialogue={setNpcDialogue}
             openExhibit={openExhibit}
           />
 
@@ -96,22 +97,6 @@ export default function ModelViewer () {
               <meshBasicMaterial color='red' />
             </mesh>
           )}
-
-          {npcData.map(npc => (
-            <group key={npc.url + npc.position.join(',')}>
-              <NPCModel
-                url={npc.url}
-                position={npc.position}
-                rotation={npc.rotation}
-                scale={npc.scale}
-                idleAnim={npc.idleAnim}
-              />
-              <NPCHitbox
-                position={npc.position}
-                onDialogue={() => { setNpcDialogue({ name: npc.name, text: npc.dialogue }); setDialogue(null) }}
-              />
-            </group>
-          ))}
 
           <TableLoader
             url={'/models/reception_counter/scene.gltf'}
