@@ -6,7 +6,7 @@ services:
     volumes:
       - ./backend:/app
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       - FLASK_DEBUG=1
     restart: unless-stopped

@@ -1,6 +1,5 @@
 flask
 flask-cors
 PyPDF2
-anthropic
-openai
-requests
+google-genai
+pydantic
