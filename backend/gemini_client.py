@@ -1,172 +1,125 @@
-"""
-Gemini API wrapper — sends structured prompts and parses responses
-into validated Pydantic models using the google-genai SDK.
-Also handles image generation from visual descriptions.
-"""
+"""Gemini API client for artifact design and image generation."""
 
-import base64
+from __future__ import annotations
+
 import json
+import logging
 import os
+import uuid
 
 from google import genai
-from google.genai import types as genai_types
-from pydantic import ValidationError
+from google.genai import types
 
-from models import WorldDesign
-from assets import NUM_POSITIONS, validate_position_index
+from models import ArtifactResult
 
-MAX_RETRIES = 3
+logger = logging.getLogger(__name__)
 
-_client = None
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-def _get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY environment variable is not set")
-        _client = genai.Client(api_key=api_key)
-    return _client
+# ---------------------------------------------------------------------------
+# Text generation – artifact descriptions
+# ---------------------------------------------------------------------------
 
+DESIGN_PROMPT = """\
+You are a museum curator designing an exhibit. Based on the following text content,
+create exactly {num_artifacts} museum artifacts. Each artifact should be a physical
+object that could be displayed in a museum and relates to the content.
 
-def _build_prompt(text: str, error_context: str | None = None) -> str:
-    """Build the full prompt for Gemini."""
-    prompt = f"""You are a world designer for an educational memory palace application.
+For each artifact provide the following fields:
+1. "name"  – A concise, evocative name for the artifact.
+2. "description" – A 2-3 sentence description of the artifact and its historical or
+   cultural significance.
+3. "visual_description" – A richly detailed visual description of the artifact
+   suitable for generating a reference image. Include details about shape, colour,
+   material, texture, approximate size, and any decorative elements. Describe a
+   single standalone physical object against a neutral background.
 
-The user has provided study material. Your job is to:
-1. Identify the most important facts from the material.
-2. Create memory artifacts — creative physical objects whose lore encodes these facts.
+Return ONLY a JSON array of objects with these three fields. No markdown fences.
 
-RULES:
-- Create up to {NUM_POSITIONS} artifacts (one per position). Try to use all {NUM_POSITIONS} if the material has enough content.
-- Each artifact gets a unique position_index from 0 to {NUM_POSITIONS - 1}.
-- position_index 0 and 1 are the MOST prominent positions — assign the two most important facts there.
-- Lower indices = more important facts. Order artifacts by decreasing importance.
-- No two artifacts may share the same position_index.
-- Each artifact needs: a creative name, lore that naturally weaves in the fact, the raw fact, and a detailed visual description for 3D model generation.
-- The visual_description should describe a specific physical object that could be a 3D model (e.g. "A crystalline orb with swirling green energy inside, resting on a stone base").
-
-=== STUDY MATERIAL ===
+Text content:
 {text}
-
-Return a JSON object matching this exact structure:
-{{
-  "artifacts": [
-    {{
-      "name": "Artifact Name",
-      "lore": "Creative lore text that naturally encodes the fact",
-      "fact": "The raw fact from the study material",
-      "visual_description": "Detailed visual description of a 3D object",
-      "position_index": 0
-    }}
-  ]
-}}"""
-
-    if error_context:
-        prompt += f"\n\nYour previous response had errors. Please fix them:\n{error_context}"
-
-    return prompt
+"""
 
 
-def _validate_world_design(design: WorldDesign) -> list[str]:
-    """Post-validate business rules beyond Pydantic schema checks."""
-    errors = []
+def design_world(text: str, num_artifacts: int) -> list[ArtifactResult]:
+    """Ask Gemini to invent *num_artifacts* museum pieces from *text*."""
 
-    # Check position indices are valid and unique
-    indices = [a.position_index for a in design.artifacts]
-    for idx in indices:
-        if not validate_position_index(idx):
-            errors.append(f'Invalid position_index: {idx} (must be 0–{NUM_POSITIONS - 1})')
-
-    dupes = set(i for i in indices if indices.count(i) > 1)
-    if dupes:
-        errors.append(f'Duplicate position indices: {dupes}')
-
-    # Check artifact count
-    if len(design.artifacts) < 1:
-        errors.append('Must have at least 1 artifact')
-    if len(design.artifacts) > NUM_POSITIONS:
-        errors.append(f'Too many artifacts: {len(design.artifacts)} > {NUM_POSITIONS}')
-
-    return errors
-
-
-def design_world(text: str) -> WorldDesign:
-    """
-    Call Gemini to design a memory world from the user's study material.
-    Uses structured output + Pydantic validation with retry.
-    """
-    client = _get_client()
-    error_context = None
-
-    for attempt in range(MAX_RETRIES):
-        prompt = _build_prompt(text, error_context)
-
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=WorldDesign,
-                temperature=0.8,
-            ),
-        )
-
-        raw = response.text
-
-        # Parse into Pydantic model
-        try:
-            design = WorldDesign.model_validate_json(raw)
-        except ValidationError as e:
-            error_context = f"JSON validation failed:\n{e}"
-            continue
-
-        # Business-rule validation
-        biz_errors = _validate_world_design(design)
-        if biz_errors:
-            error_context = "Business rule violations:\n" + "\n".join(f"- {e}" for e in biz_errors)
-            continue
-
-        return design
-
-    # All retries exhausted — raise with last error context
-    raise RuntimeError(f"Gemini failed to produce valid output after {MAX_RETRIES} attempts. Last error: {error_context}")
-
-
-def generate_image(visual_description: str) -> bytes:
-    """
-    Use Gemini to generate an image from a visual description.
-
-    Args:
-        visual_description: A text description of the artifact's appearance.
-
-    Returns:
-        Raw PNG image bytes.
-
-    Raises:
-        RuntimeError: If image generation fails.
-    """
-    client = _get_client()
-
-    prompt = (
-        "Generate a clean, high-quality image of a single 3D object on a plain white background. "
-        "The object should be centered and well-lit, suitable for 3D model generation. "
-        "No text, no labels, no watermarks.\n\n"
-        f"Object description: {visual_description}"
-    )
+    prompt = DESIGN_PROMPT.format(num_artifacts=num_artifacts, text=text)
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash-exp",
+        model="gemini-2.5-flash",
         contents=prompt,
-        config=genai_types.GenerateContentConfig(
-            response_modalities=["image", "text"],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
         ),
     )
 
-    # Extract image data from response parts
+    artifacts_data: list[dict] = json.loads(response.text)
+
+    artifacts: list[ArtifactResult] = []
+    for item in artifacts_data:
+        artifacts.append(
+            ArtifactResult(
+                id=str(uuid.uuid4()),
+                name=item["name"],
+                description=item["description"],
+                visual_description=item["visual_description"],
+            )
+        )
+
+    return artifacts
+
+
+# ---------------------------------------------------------------------------
+# Image generation – visual descriptions → PNG bytes
+# ---------------------------------------------------------------------------
+
+IMAGE_PROMPT = (
+    "Generate a photorealistic image of a museum artifact on a clean white "
+    "background. The artifact: {description}"
+)
+
+
+def generate_artifact_image(visual_description: str) -> bytes:
+    """Generate a PNG image from a visual description using Imagen 3."""
+
+    prompt = IMAGE_PROMPT.format(description=visual_description)
+
+    try:
+        # Primary: Imagen 4.0 via the google-genai SDK
+        result = client.models.generate_images(
+            model="imagen-4.0-generate-001",
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                output_mime_type="image/png",
+            ),
+        )
+        image_bytes: bytes = result.generated_images[0].image.image_bytes
+        logger.info("Image generated via Imagen 4 (%d bytes)", len(image_bytes))
+        return image_bytes
+
+    except Exception as imagen_err:
+        logger.warning("Imagen 4 failed (%s), falling back to Gemini Flash image gen", imagen_err)
+
+    # Fallback: Gemini 2.5 Flash with native image generation
+    response = client.models.generate_content(
+        model="gemini-2.5-flash-image",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_modalities=["IMAGE", "TEXT"],
+        ),
+    )
+
     for part in response.candidates[0].content.parts:
-        if hasattr(part, "inline_data") and part.inline_data is not None:
+        if part.inline_data and part.inline_data.data:
+            logger.info(
+                "Image generated via Gemini Flash (%d bytes, %s)",
+                len(part.inline_data.data),
+                part.inline_data.mime_type,
+            )
             return part.inline_data.data
 
-    raise RuntimeError("Gemini did not return an image in the response")
+    raise RuntimeError("Neither Imagen 3 nor Gemini Flash produced an image")

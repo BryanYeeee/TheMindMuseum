@@ -1,28 +1,25 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from pydantic import BaseModel
 
 
-class ArtifactSpec(BaseModel):
-    """A memory artifact designed by Gemini — lore encodes a key fact."""
-    name: str
-    lore: str
-    fact: str
-    visual_description: str
-    position_index: int
-
-
-class WorldDesign(BaseModel):
-    """The world design returned by Gemini."""
-    artifacts: list[ArtifactSpec]
-
-
 class ArtifactResult(BaseModel):
-    """Artifact sent to the client — includes model URL."""
+    """A single museum artifact with metadata and optional 3D model."""
+
+    id: str
     name: str
-    lore: str
-    fact: str
-    model_url: str
+    description: str
+    visual_description: str
+    model_url: Optional[str] = None
+    status: str = "pending"  # pending | generating_image | generating_model | complete | error
+    error: Optional[str] = None
 
 
 class JobResult(BaseModel):
-    """Final result sent to the client."""
+    """A design job containing multiple artifacts being generated."""
+
+    job_id: str
     artifacts: list[ArtifactResult]
+    status: str = "pending"  # pending | in_progress | complete

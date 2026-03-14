@@ -10,7 +10,7 @@ from flask_cors import CORS
 from PyPDF2 import PdfReader
 
 from models import ArtifactResult, JobResult
-from gemini_client import design_world
+from gemini_client import design_world, generate_artifact_image
 from model_generator import generate_model, GENERATED_MODELS_DIR
 
 app = Flask(__name__, static_folder="static")
@@ -20,202 +20,136 @@ CORS(app)
 
 MAX_TEXT_CHARS = 500_000  # ~125K tokens — safe margin for Gemini context window
 
-
-@app.errorhandler(413)
-def too_large(e):
-    return jsonify({"error": "File too large. Maximum upload size is 16 MB."}), 413
-
-
 # ---------------------------------------------------------------------------
 # In-memory job store
 # ---------------------------------------------------------------------------
-# Each job: {"status": str, "events": list[dict], "result": dict|None,
-#            "error": str|None, "done": threading.Event}
-jobs: dict[str, dict] = {}
+jobs: dict[str, JobResult] = {}
 
 
-def _extract_text_from_request() -> tuple[str | None, tuple | None]:
-    """Extract text from the incoming request (JSON, form, or PDF).
-    Returns (text, error_response) — one will be None."""
-    text = None
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    if "pdf" in request.files:
-        pdf_file = request.files["pdf"]
-        if pdf_file.filename == "":
-            return None, (jsonify({"error": "Empty filename"}), 400)
-        try:
-            reader = PdfReader(io.BytesIO(pdf_file.read()))
+def _extract_text(req) -> str:
+    """Extract text from the request – either a ``text`` field or a PDF upload."""
+    if "file" in req.files:
+        file = req.files["file"]
+        if file.filename and file.filename.lower().endswith(".pdf"):
+            reader = PdfReader(io.BytesIO(file.read()))
             text = "\n".join(page.extract_text() or "" for page in reader.pages)
-        except Exception as e:
-            return None, (jsonify({"error": f"Failed to parse PDF: {str(e)}"}), 400)
+            return text[:MAX_TEXT_CHARS]
 
-    elif request.is_json:
-        text = request.get_json().get("text")
-
-    elif "text" in request.form:
-        text = request.form.get("text")
-
-    if not text or not text.strip():
-        return None, (jsonify({"error": "No text or PDF provided"}), 400)
-
-    # Truncate to stay within Gemini's context window
-    if len(text) > MAX_TEXT_CHARS:
-        text = text[:MAX_TEXT_CHARS]
-
-    return text, None
+    # Fall back to plaintext field (form-data or JSON body)
+    text = req.form.get("text") or (req.get_json(silent=True) or {}).get("text", "")
+    return text[:MAX_TEXT_CHARS]
 
 
-def _emit(job_id: str, event: dict):
-    """Append an event to the job's event list."""
-    jobs[job_id]["events"].append(event)
+def _get_num_artifacts(req) -> int:
+    val = req.form.get("num_artifacts") or (req.get_json(silent=True) or {}).get("num_artifacts")
+    if not val:
+        raise ValueError("num_artifacts is required")
+    return int(val)
 
 
-def _run_job(job_id: str, text: str, full_generation: bool = False):
-    """Background worker — runs the full world generation pipeline."""
-    try:
-        # Step 1: Gemini world design
-        _emit(job_id, {"status": "summarizing", "message": "Analyzing input with Gemini..."})
-        world_design = design_world(text)
+def _process_job(job_id: str):
+    """Background thread: generate an image then a 3D model for every artifact."""
+    job = jobs.get(job_id)
+    if not job:
+        return
 
-        # Step 2: Sort artifacts by position_index (importance order)
-        sorted_artifacts = sorted(world_design.artifacts, key=lambda a: a.position_index)
+    job.status = "in_progress"
 
-        # Dev mode: only generate 3D model for the first artifact
-        if not full_generation:
-            _emit(job_id, {"status": "dev_mode", "message": f"Dev mode: generating 1/{len(sorted_artifacts)} models (pass full_generation=true for all)"})
+    for artifact in job.artifacts:
+        try:
+            artifact.status = "generating_image"
+            image_bytes = generate_artifact_image(artifact.visual_description)
 
-        # Step 3: Generate image + 3D model for each artifact
-        total = len(sorted_artifacts)
-        _emit(job_id, {"status": "generating_models", "progress": f"0/{total}",
-                        "message": "Generating images and 3D models..."})
+            artifact.status = "generating_model"
+            model_url = generate_model(image_bytes, artifact.id)
 
-        artifact_results: list[ArtifactResult] = []
-        for i, artifact in enumerate(sorted_artifacts):
-            # Dev mode: only generate the first model, rest get placeholder URLs
-            if not full_generation and i >= 1:
-                ar = ArtifactResult(
-                    name=artifact.name,
-                    lore=artifact.lore,
-                    fact=artifact.fact,
-                    model_url="",
-                )
-                artifact_results.append(ar)
-                _emit(job_id, {"status": "artifact_ready", "index": i, "total": total,
-                                "artifact": ar.model_dump()})
-                continue
+            artifact.model_url = model_url
+            artifact.status = "complete"
+        except Exception as exc:
+            artifact.status = "error"
+            artifact.error = str(exc)
 
-            _emit(job_id, {"status": "generating_models", "progress": f"{i}/{total}",
-                            "message": f"Generating: {artifact.name}"})
-            filename = generate_model(artifact.visual_description)
-            ar = ArtifactResult(
-                name=artifact.name,
-                lore=artifact.lore,
-                fact=artifact.fact,
-                model_url=f"/api/models/{filename}",
-            )
-            artifact_results.append(ar)
-            _emit(job_id, {"status": "artifact_ready", "index": i, "total": total,
-                            "artifact": ar.model_dump()})
-
-        # Step 4: Complete
-        result = JobResult(
-            artifacts=artifact_results,
-        )
-
-        jobs[job_id]["result"] = result.model_dump()
-        jobs[job_id]["status"] = "completed"
-        _emit(job_id, {"status": "completed", "result": result.model_dump()})
-
-    except Exception as e:
-        jobs[job_id]["status"] = "failed"
-        jobs[job_id]["error"] = str(e)
-        _emit(job_id, {"status": "failed", "error": str(e)})
-
-    finally:
-        jobs[job_id]["done"].set()
+    job.status = "complete"
 
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
 
-@app.route("/api/generate-world", methods=["POST"])
-def generate_world():
-    """Accept text or PDF, kick off async world generation, return job ID.
+@app.route("/design", methods=["POST"])
+def design():
+    """Accept text/PDF + num_artifacts, return artifact list, kick off 3D gen."""
+    try:
+        num_artifacts = _get_num_artifacts(request)
+    except (ValueError, TypeError) as exc:
+        return jsonify({"error": str(exc)}), 400
 
-    Optional parameter:
-        full_generation (bool): If true, generate all 14 3D models.
-            Defaults to false (dev mode — only generates 1 model to save cost).
-    """
-    text, error = _extract_text_from_request()
-    if error:
-        return error
+    text = _extract_text(request)
+    if not text.strip():
+        return jsonify({"error": "No text content provided. Send a 'text' field or upload a PDF."}), 400
 
-    # Check for full_generation flag in JSON body or query param
-    full_generation = False
-    if request.is_json:
-        full_generation = bool(request.get_json().get("full_generation", False))
-    elif request.args.get("full_generation", "").lower() in ("true", "1"):
-        full_generation = True
+    try:
+        artifacts = design_world(text, num_artifacts)
+    except Exception as exc:
+        return jsonify({"error": f"Failed to generate artifacts: {exc}"}), 500
 
-    job_id = uuid.uuid4().hex
-    jobs[job_id] = {
-        "status": "queued",
-        "events": [{"status": "queued"}],
-        "result": None,
-        "error": None,
-        "done": threading.Event(),
-    }
+    job_id = str(uuid.uuid4())
+    job = JobResult(job_id=job_id, artifacts=artifacts, status="pending")
+    jobs[job_id] = job
 
-    thread = threading.Thread(target=_run_job, args=(job_id, text, full_generation), daemon=True)
-    thread.start()
+    # Kick off background image → 3-D pipeline
+    threading.Thread(target=_process_job, args=(job_id,), daemon=True).start()
 
-    return jsonify({"job_id": job_id, "full_generation": full_generation}), 202
+    return jsonify(job.model_dump())
 
 
-@app.route("/api/jobs/<job_id>/events")
-def job_events(job_id):
-    """SSE endpoint — streams status events until the job completes or fails."""
+@app.route("/design/stream/<job_id>")
+def design_stream(job_id):
+    """SSE endpoint – pushes ``artifact_update`` events as models finish."""
     if job_id not in jobs:
-        return jsonify({"error": "Unknown job ID"}), 404
+        return jsonify({"error": "Job not found"}), 404
 
     def event_stream():
-        sent = 0
+        job = jobs[job_id]
+        # Track last-seen status so we only emit on change
+        last_statuses: dict[str, str] = {a.id: a.status for a in job.artifacts}
+
         while True:
-            job = jobs[job_id]
-            events = job["events"]
+            for artifact in job.artifacts:
+                if artifact.status != last_statuses.get(artifact.id):
+                    last_statuses[artifact.id] = artifact.status
+                    payload = {
+                        "id": artifact.id,
+                        "name": artifact.name,
+                        "status": artifact.status,
+                        "model_url": artifact.model_url,
+                        "error": artifact.error,
+                    }
+                    yield f"event: artifact_update\ndata: {json.dumps(payload)}\n\n"
 
-            # Yield any new events
-            while sent < len(events):
-                evt = events[sent]
-                yield f"data: {json.dumps(evt)}\n\n"
-                sent += 1
+            if job.status == "complete":
+                yield f"event: job_complete\ndata: {json.dumps({'job_id': job_id})}\n\n"
+                break
 
-                # Stop streaming after terminal events
-                if evt.get("status") in ("completed", "failed"):
-                    return
+            time.sleep(1)
 
-            # Wait briefly before checking for new events
-            time.sleep(0.3)
-
-    return Response(
-        event_stream(),
-        mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return Response(event_stream(), content_type="text/event-stream")
 
 
-@app.route("/api/models/<filename>")
+@app.route("/models/<path:filename>")
 def serve_model(filename):
-    """Serve a generated .glb model file."""
-    filepath = os.path.join(GENERATED_MODELS_DIR, filename)
-    if not os.path.isfile(filepath):
-        return jsonify({"status": "generating", "message": "Model not ready yet"}), 202
-    return send_from_directory(GENERATED_MODELS_DIR, filename, mimetype="model/gltf-binary")
+    """Serve generated .glb files from the models directory."""
+    return send_from_directory(GENERATED_MODELS_DIR, filename)
+
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({"error": "File too large. Maximum upload size is 16 MB."}), 413
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=True, host="0.0.0.0", port=5000)

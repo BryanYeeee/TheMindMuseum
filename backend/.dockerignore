@@ -4,3 +4,8 @@ __pycache__
 .venv
 .env
 .git
+generated_models/
+static/
+test_model_generation.py
+test-image.png
+*.egg-info/
