@@ -8,7 +8,7 @@ import Model from './Model';
 
 export default function ModelViewer({ url }) {
   return (
-    <div style={{ width: '100%', height: '500px', background: '#111' }}>
+    <div style={{ width: '100%', height: '100%', background: '#111' }}>
       <Canvas shadows dpr={[1, 2]}>
         <Suspense fallback={null}>
           <PerspectiveCamera makeDefault position={[0, 0, 5]} />
