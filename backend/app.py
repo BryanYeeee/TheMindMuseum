@@ -4,7 +4,7 @@ import os
 import threading
 import time
 import uuid
-
+from rag_agent.rag import rag
 from flask import Flask, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PyPDF2 import PdfReader
@@ -14,6 +14,7 @@ from gemini_client import design_world
 from model_generator import generate_model, GENERATED_MODELS_DIR
 
 app = Flask(__name__, static_folder="static")
+app.register_blueprint(rag, url_prefix="/agent")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
 CORS(app)
 
@@ -217,4 +218,4 @@ def serve_model(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=8080)
