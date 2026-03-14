@@ -21,62 +21,72 @@ export const exhibitData = [
     segmentID: 'tile-0-0',
     position: OBJ_POS[1],
     url: '',
-    dialogue: 'The Dawn of Man.'
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-0-0',
     position: OBJ_POS[6],
     url: '',
-    dialogue: 'The Dawn of Man.'
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-0-0',
     position: OBJ_POS[1],
     url: '',
-    dialogue: 'The Dawn of Man.'
+    name: 'The Dawn of Man',
+    description: 'A primitive artifact marking the earliest known chapter of human civilisation.',
   },
   {
     segmentID: 'tile-1-0',
     position: OBJ_POS[2],
     url: '',
-    dialogue: 'Fragmented Reality.'
+    name: 'Fragmented Reality',
+    description: 'Shards of perception assembled into a single, unsettling whole.',
   },
   {
     segmentID: 'tile-1-0',
     position: OBJ_POS[4],
     url: '',
-    dialogue: 'The Bronze Warrior.'
+    name: 'The Bronze Warrior',
+    description: 'Cast in antiquity, this figure has outlasted every war it was forged to commemorate.',
   },
   {
     segmentID: 'tile-2-1',
     type: 'painting',
     url: '',
     position: PAINT_POS[3],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    name: 'The Great Wave',
+    description: "A digital reproduction of Hokusai's iconic woodblock print — nature rendered as both beauty and terror.",
   },
   {
     segmentID: 'tile-0-1',
     type: 'painting',
     url: '',
     position: PAINT_POS[3],
-    dialogue: "A digital reproduction of 'The Great Wave'."
+    name: 'The Great Wave',
+    description: "A digital reproduction of Hokusai's iconic woodblock print — nature rendered as both beauty and terror.",
   },
   {
     segmentID: 'tile-0-1',
     position: OBJ_POS[1],
     url: '',
-    dialogue: 'Ceramic Study #4.'
+    name: 'Ceramic Study #4',
+    description: 'One in a series of explorations into form and void through fired clay.',
   },
   {
     segmentID: 'tile-0-1',
     position: OBJ_POS[2],
     url: '',
-    dialogue: 'The Celestial Map.'
+    name: 'The Celestial Map',
+    description: 'An early attempt to chart the heavens — incomplete, but breathtaking in its ambition.',
   },
   {
     segmentID: 'tile-0-1',
     position: OBJ_POS[3],
     url: '',
-    dialogue: 'Ancient Relic.'
+    name: 'Ancient Relic',
+    description: 'Its origin is unknown. Its purpose, lost to time.',
   }
 ]

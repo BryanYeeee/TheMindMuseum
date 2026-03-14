@@ -38,7 +38,7 @@ const MODEL = (xIndex, zIndex) => {
   }
 }
 
-export default function Tileset ({ setDialogue }) {
+export default function Tileset ({ setDialogue, openExhibit }) {
   return (
     <>
       {MAP.map((row, zIndex) =>
@@ -53,6 +53,7 @@ export default function Tileset ({ setDialogue }) {
               position={POSITIONS(xIndex, zIndex)[tileType]}
               rotation={ROTATIONS[tileType]}
               setDialogue={setDialogue}
+              openExhibit={openExhibit}
               mirrored={zIndex % 2 == 0}
               exhibits={exhibitData.filter(ex => ex.segmentID === segmentID)}
               triggers={triggerData.filter(tr => tr.segmentID === segmentID)}

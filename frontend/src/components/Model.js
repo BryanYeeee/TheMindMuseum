@@ -11,6 +11,7 @@ export default function Model ({
   exhibits = [],
   triggers = [],
   setDialogue,
+  openExhibit,
   mirrored = true,
   ...props
 }) {
@@ -97,7 +98,7 @@ export default function Model ({
           position: exhibit.position,
           rotation: exhibit.rotation || [0, 0, 0],
           scale: exhibit.scale || 1,
-          onInteract: () => setDialogue(exhibit.dialogue)
+          onInteract: () => openExhibit(exhibit)
         }
 
         return exhibit.type === 'painting' ? (

@@ -81,7 +81,10 @@ export default function ModelViewer () {
             color='#ffffff'
           />
 
-          <Tileset setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }} />
+          <Tileset
+            setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }}
+            openExhibit={openExhibit}
+          />
 
           {lastCoords !== 'Click a surface to get coords' && (
             <mesh
@@ -109,22 +112,6 @@ export default function ModelViewer () {
               />
             </group>
           ))}
-
-          <mesh
-            position={[5, 0.3, 0]}
-            castShadow
-            onClick={(e) => {
-              e.stopPropagation()
-              openExhibit({
-                name: 'Red Ball',
-                description: 'A perfectly round crimson sphere. Its surface is smooth to the touch, yet it carries an inexplicable weight — as if it has witnessed things no object should.',
-                color: '#cc4444',
-              })
-            }}
-          >
-            <sphereGeometry args={[0.3, 32, 32]} />
-            <meshStandardMaterial color='#cc4444' roughness={0.4} metalness={0.2} />
-          </mesh>
 
           <TableLoader
             url={'/models/reception_counter/scene.gltf'}
