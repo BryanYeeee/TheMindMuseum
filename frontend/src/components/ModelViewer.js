@@ -10,6 +10,7 @@ import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
 import UI from './UI'
+import TableLoader from './TableLoader'
 
 const triggerData = [
   {
@@ -52,7 +53,7 @@ export default function ModelViewer () {
             shadow-mapSize={[2048, 2048]}
           />
           <fog attach='fog' args={['#050505', 1, 65]} />
-          <pointLight position={[0, 5, 0]} intensity={2} color='#ffcc77' />
+          <pointLight position={[0, 20, -20]} intensity={2000} color='#ffffff' />
 
           <Model url='/models/museum_interior/scene.gltf' />
           <Model
@@ -77,7 +78,69 @@ export default function ModelViewer () {
             rotation={[0, 2.5, 0]}
             scale={0.019}
             idleAnim="mixamo.com"
-            onClick={() => openDialogue('happy_joe')}  // your own handler
+          />
+
+          <NPCModel
+            url="/models/lebron.fbx"
+            position={[-9.5, 0, 1.5]}
+            rotation={[0, 4, 0]}
+            scale={0.0195}
+            idleAnim="mixamo.com"
+          />
+
+          <NPCModel
+            url="/models/happy_guy.fbx"
+            position={[24.5, 0, 5.5]}
+            rotation={[0, -1, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+          />
+
+          <NPCModel
+            url="/models/happy_person.fbx"
+            position={[8, 0, 5.5]}
+            rotation={[0, -0.5, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+          />
+
+          <NPCModel
+            url="/models/yes.fbx"
+            position={[12.5, 0, -1.2]}
+            rotation={[0, -0.5, 0]}
+            scale={0.0085}
+            idleAnim="mixamo.com"
+          />
+
+          <NPCModel
+            url="/models/talking.fbx"
+            position={[12.5, 0, 1.2]}
+            rotation={[0, 3.5, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+          />
+
+          <NPCModel
+            url="/models/jody.fbx"
+            position={[-21.5, 0, -5.5]}
+            rotation={[0, 2, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+          />
+
+          <TableLoader
+            url={'/models/reception_counter/scene.gltf'}
+            position={[-0.85, 1.9, -5]}
+            rotation={[0, 2*Math.PI, 0]}
+            scale={1.5}
+          />
+
+          <NPCModel
+            url="/models/reception.fbx"
+            position={[1.2, 0, -6.75]}
+            rotation={[0, 0, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
           />
 
           <TriggerManager

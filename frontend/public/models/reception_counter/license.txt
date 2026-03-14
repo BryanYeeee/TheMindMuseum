@@ -1,0 +1,11 @@
+Model Information:
+* title:	Reception Couter
+* source:	https://sketchfab.com/3d-models/reception-couter-fb0809a5428e4a6e8818123ff3e824ca
+* author:	saqib24 (https://sketchfab.com/saqib24)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Reception Couter" (https://sketchfab.com/3d-models/reception-couter-fb0809a5428e4a6e8818123ff3e824ca) by saqib24 (https://sketchfab.com/saqib24) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
