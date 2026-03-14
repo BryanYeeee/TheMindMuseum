@@ -19,7 +19,13 @@ export default function ModelViewer({ url }) {
           </Stage>
 
           {/* Allows user to rotate/zoom the model */}
-          <OrbitControls makeDefault autoRotate />
+          <OrbitControls 
+            makeDefault 
+            enablePan={true} 
+            enableZoom={true} 
+            minPolarAngle={0} 
+            maxPolarAngle={Math.PI / 1.75} 
+          />
         </Suspense>
       </Canvas>
     </div>

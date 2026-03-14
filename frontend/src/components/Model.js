@@ -9,4 +9,4 @@ export default function Model({ url }) {
 }
 
 // Pre-loading helps avoid "popping" during navigation
-useGLTF.preload('/scene.gltf');
+useGLTF.preload('/models/museum_interior/scene.gltf');
