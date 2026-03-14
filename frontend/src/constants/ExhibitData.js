@@ -48,7 +48,7 @@ export const exhibitData = [
     dialogue: 'The Bronze Warrior.'
   },
   {
-    segmentID: 'tile-1-0',
+    segmentID: 'tile-2-1',
     type: 'painting',
     url: '',
     position: PAINT_POS[3],

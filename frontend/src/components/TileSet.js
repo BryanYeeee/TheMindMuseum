@@ -4,11 +4,11 @@ import { exhibitData } from '@/constants/ExhibitData'
 import { triggerData } from '@/constants/TriggerData'
 
 const MAP = [
-//   [0, 4],
-[1,0],
+  [0, 4],
   [1, 2],
-//   [1, 2],
-//   [0, 3]
+  [1, 2],
+  [1, 2],
+  [0, 3]
 ]
 
 const L = 34.5
@@ -17,8 +17,8 @@ const W = 20
 const ROTATIONS = {
   1: [0, 0, 0],
   2: [0, Math.PI, 0],
-  3: [0, Math.PI / 2, 0], 
-  4: [0, -Math.PI / 2, 0] 
+  3: [0, Math.PI / 2, 0],
+  4: [0, -Math.PI / 2, 0]
 }
 const POSITIONS = (xIndex, zIndex) => {
   return {
@@ -29,25 +29,31 @@ const POSITIONS = (xIndex, zIndex) => {
   }
 }
 
+const MODEL = (xIndex, zIndex) => {
+  return {
+    1: '/models/museum_no_paintings_left_side_hole.glb',
+    2: '/models/museum_no_paintings_left_side_hole.glb',
+    3: '/models/museum_no_painting_full.glb',
+    4: '/models/museum_no_painting_full.glb'
+  }
+}
+
 export default function Tileset ({ setDialogue }) {
   return (
     <>
       {MAP.map((row, zIndex) =>
         row.map((tileType, xIndex) => {
           if (tileType === 0) return null
-
-          const position = POSITIONS(xIndex, zIndex)[tileType]
-          const rotation = ROTATIONS[tileType] || [0, 0, 0]
           const segmentID = `tile-${zIndex}-${xIndex}`
 
           return (
             <Model
               key={segmentID}
-                url={xIndex==0?'/models/museum_interior/scene.gltf':
-              '/models/museum_left_side_cut.glb'}
-              position={position}
-              rotation={rotation}
+              url={MODEL(xIndex, zIndex)[tileType]}
+              position={POSITIONS(xIndex, zIndex)[tileType]}
+              rotation={ROTATIONS[tileType]}
               setDialogue={setDialogue}
+              mirrored={zIndex % 2 == 0}
               exhibits={exhibitData.filter(ex => ex.segmentID === segmentID)}
               triggers={triggerData.filter(tr => tr.segmentID === segmentID)}
             />
