@@ -1,11 +1,21 @@
-import { useGLTF } from '@react-three/drei';
-import { useMemo } from 'react';
+import { useGLTF, useTexture } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
+import { useEffect, useMemo } from 'react'
 
-export default function Model({ url, ...props }) {
-  const { scene } = useGLTF(url);
-  
-  // Clone the scene so each instance can have its own position/rotation
-  const clonedScene = useMemo(() => scene.clone(), [scene]);
+export default function Model ({ url, ...props }) {
+  // useGLTF handles loading and caching automatically
 
-  return <primitive object={clonedScene} {...props} />;
+  const { scene } = useGLTF(url)
+  const { scene: threeScene } = useThree()
+  const bg = useTexture('/images/sky.png')
+  const clonedScene = useMemo(() => scene.clone(), [scene])
+  useEffect(() => {
+    threeScene.background = bg
+  }, [bg, threeScene])
+
+  return (
+    <>
+      <primitive object={clonedScene} {...props} />
+    </>
+  )
 }
