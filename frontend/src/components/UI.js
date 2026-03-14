@@ -136,6 +136,17 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
           </motion.div>
         )}
       </AnimatePresence>
+      {/* BOTTOM RIGHT: ACCESSION NUMBER */}
+            <div className='absolute bottom-12 right-12 text-right'>
+              <p className='text-white text-[9px] uppercase tracking-[0.3em] mb-1 font-sans font-bold'>
+                Loc. Data
+              </p>
+              <code className='text-amber-600 font-mono text-[10px] tracking-widest bg-white/20 px-2 py-1'>
+                {lastCoords
+                  ? lastCoords.replace('position={[', '').replace(']}', '')
+                  : '0.00 / 0.00 / 0.00'}
+              </code>
+            </div>
     </div>
   )
 }

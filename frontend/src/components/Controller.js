@@ -4,8 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 
 const NPC_RADIUS = 0.8;
-
-export default function Controller({ speed = 0.1, isLocked = false, npcPositions = [] }) {
+export default function Controller({ speed = 0.1, sprintMultiplier = 2, isLocked = false, npcPositions = []  }) {
   const { camera } = useThree();
   const [keys, setKeys] = useState({});
 
@@ -23,6 +22,14 @@ export default function Controller({ speed = 0.1, isLocked = false, npcPositions
 
   useFrame(() => {
     if (!isLocked) return;
+
+    // Determine current speed based on Shift key
+    const currentSpeed = keys.ShiftLeft
+      ? speed * sprintMultiplier 
+      : keys.ShiftRight 
+      ? speed * sprintMultiplier * 3
+      : speed;
+
     const direction = new Vector3();
     const frontVector = new Vector3(0, 0, Number(keys.KeyS || 0) - Number(keys.KeyW || 0));
     const sideVector = new Vector3(Number(keys.KeyA || 0) - Number(keys.KeyD || 0), 0, 0);
@@ -30,7 +37,7 @@ export default function Controller({ speed = 0.1, isLocked = false, npcPositions
     direction
       .subVectors(frontVector, sideVector)
       .normalize()
-      .multiplyScalar(speed)
+      .multiplyScalar(currentSpeed) // Apply the calculated speed
       .applyQuaternion(camera.quaternion);
 
     // Check each axis separately so the player can slide along an NPC
