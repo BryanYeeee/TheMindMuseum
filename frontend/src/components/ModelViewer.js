@@ -11,6 +11,7 @@ import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
 import UI from './UI'
 import TableLoader from './TableLoader'
+import ExhibitViewer from './ExhibitViewer'
 
 const triggerData = [
   {
@@ -121,7 +122,11 @@ export default function ModelViewer () {
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+  const [exhibit, setExhibit] = useState(null)
   const controlsRef = useRef()
+
+  // Don't exit pointer lock when opening — keeps the lock so E can close and return directly
+  const openExhibit = (data) => setExhibit(data)
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
@@ -183,6 +188,22 @@ export default function ModelViewer () {
             </group>
           ))}
 
+          <mesh
+            position={[5, 0.3, 0]}
+            castShadow
+            onClick={(e) => {
+              e.stopPropagation()
+              openExhibit({
+                name: 'Red Ball',
+                description: 'A perfectly round crimson sphere. Its surface is smooth to the touch, yet it carries an inexplicable weight — as if it has witnessed things no object should.',
+                color: '#cc4444',
+              })
+            }}
+          >
+            <sphereGeometry args={[0.3, 32, 32]} />
+            <meshStandardMaterial color='#cc4444' roughness={0.4} metalness={0.2} />
+          </mesh>
+
           <TableLoader
             url={'/models/reception_counter/scene.gltf'}
             position={[-0.85, 1.9, -5]}
@@ -199,14 +220,16 @@ export default function ModelViewer () {
 
           <PointerLockControls
             ref={controlsRef}
+            enabled={!exhibit}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked} npcPositions={npcData.map(n => n.position)} />
+          <Controller isLocked={isLocked && !exhibit} npcPositions={npcData.map(n => n.position)} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
       <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
+      <ExhibitViewer exhibit={exhibit} onClose={() => setExhibit(null)} onResume={() => controlsRef.current?.lock()} />
     </div>
   )
 }
