@@ -5,7 +5,7 @@ import { PointerLockControls, Environment } from '@react-three/drei'
 import { Suspense, useState, useEffect, useRef } from 'react'
 import Model from './Model'
 import Controller from './Controller'
-import NPCModel from './Npcmodel'
+import NPCModel from './NpcModel'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
@@ -34,6 +34,18 @@ export default function ModelViewer () {
     audio.volume = 0.4
     audioRef.current = audio
     return () => { audio.pause(); audio.src = '' }
+  }, [])
+
+  // Close dialogue on E key
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.code === 'KeyE') {
+        setNpcDialogue(null)
+        setDialogue(null)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
   // Start music on first pointer lock (browsers require a user gesture)
@@ -88,7 +100,7 @@ export default function ModelViewer () {
             exhibits={exhibitData.filter(exhibit => exhibit.segmentID === 2)} // These will automatically flip to match the rotation
             triggers={triggerData.filter(tr => tr.segmentID === 2)}
           /> */}
-          <Tileset setDialogue={setDialogue} />
+          <Tileset setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }} />
 
           {lastCoords !== 'Click a surface to get coords' && (
             <mesh
