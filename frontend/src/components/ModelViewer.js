@@ -85,10 +85,10 @@ export default function ModelViewer () {
       >
         <Suspense fallback={null}>
           <Environment preset='city' environmentIntensity={0.35} />
-          <ambientLight intensity={0.2} />
+          {/* <ambientLight intensity={0.2} /> */}
           <directionalLight
             position={[10, 20, 10]}
-            intensity={3.5}
+            intensity={2.5}
             castShadow
             shadow-mapSize={[2048, 2048]}
           />
