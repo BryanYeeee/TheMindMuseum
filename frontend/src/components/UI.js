@@ -78,7 +78,7 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
 
             {/* BOTTOM LEFT: INSTRUCTIONS */}
             <div className='absolute bottom-8 left-10 flex flex-col gap-2 opacity-50'>
-              {[['Movement', 'W A S D'], ['Look', 'MOUSE'], ['Interact', 'CLICK']].map(([label, key]) => (
+              {[['Movement', 'W · A · S · D'], ['Look', 'MOUSE'], ['Interact', 'CLICK']].map(([label, key]) => (
                 <div key={label} className='flex items-center gap-3'>
                   <span className='text-[9px] text-white/40 tracking-[0.2em] uppercase w-16'>{label}</span>
                   <span className='text-[10px] text-white tracking-widest border border-white/10 px-2 py-0.5'>{key}</span>
@@ -103,7 +103,7 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
                       <span className='text-amber-400 text-[10px] tracking-[0.2em] uppercase'>{npcDialogue.name}</span>
                     </div>
                     <p className='px-5 py-4 text-white/85 text-sm leading-relaxed'>{npcDialogue.text}</p>
-                    <p className='px-5 pb-3 text-white/20 text-[9px] tracking-[0.2em] uppercase text-right'>ESC · Dismiss</p>
+                    <p className='px-5 pb-3 text-white/20 text-[9px] tracking-[0.2em] uppercase text-right'>ESC · Close</p>
                   </div>
                 </motion.div>
               )}
