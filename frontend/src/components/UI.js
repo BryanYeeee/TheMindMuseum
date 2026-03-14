@@ -54,60 +54,60 @@
               </motion.div>
             </motion.div>
           )}
-          {/* --- THE GALLERY HUD (INGAME UI) --- */}
-          {isLocked && (
-            <motion.div
-              key='hud'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }} // Fades out when you hit Escape
-              transition={{ duration: 0.4 }}
-              className='absolute inset-0'
-            >
-              {/* CINEMATIC OVERLAYS */}
-              <div className='absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.8)] pointer-events-none' />
+        {/* --- THE GALLERY HUD (INGAME UI) --- */}
+        {isLocked && (
+          <motion.div
+            key='hud'
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} // Fades out when you hit Escape
+            transition={{ duration: 0.4 }}
+            className='absolute inset-0'
+          >
+             {/* CINEMATIC OVERLAYS */}
+            <div className='absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.8)] pointer-events-none' />
 
-              {/* TOP LEFT: BRANDING */}
-              <motion.div className='absolute top-12 left-12 border-l border-amber-600 pl-5 py-1'>
-                <h1 className='text-2xl tracking-[0.35em] uppercase font-light text-white italic'>
-                  The  Mind  Museum
-                </h1>
-                <p className='text-amber-600 text-[9px] tracking-[0.2em] uppercase font-sans mt-1 font-bold'>
-                  Live Observation
-                </p>
-              </motion.div>
+            {/* TOP LEFT: BRANDING */}
+            <motion.div className='absolute top-12 left-12 border-l border-amber-600 pl-5 py-1'>
+              <h1 className='text-xl tracking-[0.1em] text-white'>
+                The Mind Museum
+              </h1>
+              <p className='text-amber-600 text-[9px] tracking-[0.2em] uppercase font-sans mt-1 font-bold'>
+                Live Observation
+              </p>
+            </motion.div>
 
-              {/* CENTER: RETICLE */}
-              <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
-                <div className='w-[2px] h-[2px] bg-white/60 rotate-45' />
-                <motion.div
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
-                  transition={{ repeat: Infinity, duration: 4 }}
-                  className='absolute -inset-4 border border-white rounded-full'
-                />
+            {/* CENTER: RETICLE */}
+            <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+              <div className='w-[2px] h-[2px] bg-white/60 rotate-45' />
+              <motion.div
+                animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
+                transition={{ repeat: Infinity, duration: 4 }}
+                className='absolute -inset-4 border border-white rounded-full'
+              />
+            </div>
+
+            {/* BOTTOM LEFT: INSTRUCTIONS */}
+            <div className='absolute bottom-12 left-12 flex flex-col gap-3 font-sans'>
+              <div className='flex flex-col gap-1'>
+                <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
+                  Movement
+                </span>
+                <span className='text-[14px] tracking-widest'>W A S D</span>
               </div>
-
-              {/* BOTTOM LEFT: INSTRUCTIONS */}
-              <div className='absolute bottom-12 left-12 flex flex-col gap-3 font-sans'>
-                <div className='flex flex-col gap-1'>
-                  <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
-                    Movement
-                  </span>
-                  <span className='text-[14px] tracking-widest'>W A S D</span>
-                </div>
-                <div className='flex flex-col gap-1'>
-                  <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
-                    Sprint
-                  </span>
-                  <span className='text-[14px] tracking-widest'>Shift</span>
-                </div>
-                <div className='flex flex-col gap-1'>
-                  <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
-                    Gaze
-                  </span>
-                  <span className='text-[14px] tracking-widest'>MOUSE</span>
-                </div>
+              <div className='flex flex-col gap-1'>
+                <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
+                  Sprint
+                </span>
+                <span className='text-[14px] tracking-widest'>Shift</span>
               </div>
+              <div className='flex flex-col gap-1'>
+                <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
+                  Gaze
+                </span>
+                <span className='text-[14px] tracking-widest'>MOUSE</span>
+              </div>
+            </div>
 
 
               {/* NPC DIALOGUE BOX */}
