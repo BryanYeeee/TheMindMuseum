@@ -5,7 +5,7 @@ import { npcData } from '@/constants/NpcData'
 import { triggerData } from '@/constants/TriggerData'
 
 const MAP = [
-  [0, 4],
+  // [0, 4],
   [1, 2],
   [1, 2],
   [1, 2],
