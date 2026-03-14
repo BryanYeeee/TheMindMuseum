@@ -1,0 +1,10 @@
+{
+    "name": "debug-frontend",
+    "private": true,
+    "scripts": {
+        "start": "npx serve -s . -l 3001"
+    },
+    "devDependencies": {
+        "serve": "^14.2.0"
+    }
+}

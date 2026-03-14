@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 .venv/
-backend/generated_models/*.glb
+backend/generated_models/
+!backend/generated_models/.gitkeep
+backend/static/models/
+!backend/static/models/.gitkeep
 *.idea
 backend/chroma_db

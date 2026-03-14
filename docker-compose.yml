@@ -1,10 +1,13 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "5001:5000"
     volumes:
       - ./backend:/app
+      - /app/__pycache__
     env_file:
       - .env
     environment:
@@ -25,11 +28,11 @@ services:
     restart: unless-stopped
 
   debug-client:
-    build: ./debug-client
+    build: ./debug-frontend
     ports:
       - "3001:3001"
     volumes:
-      - ./debug-client:/app
+      - ./debug-frontend:/app
       - /app/node_modules
     depends_on:
       - backend
