@@ -18,9 +18,11 @@ import { npcData } from '@/constants/NpcData'
 import { exhibitData } from '@/constants/ExhibitData'
 import NPCHitbox from './NpcHitbox'
 import Tileset from './TileSet'
+import CompassBridge from './CompassBridge'
 
 export default function ModelViewer () {
   const [lastCoords, setLastCoords] = useState('Click a surface to get coords')
+  const [heading, setHeading] = useState(0)
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
@@ -33,21 +35,37 @@ export default function ModelViewer () {
     audio.loop = true
     audio.volume = 0.4
     audioRef.current = audio
-    return () => { audio.pause(); audio.src = '' }
+    return () => {
+      audio.pause()
+      audio.src = ''
+    }
   }, [])
 
   // Start music on first pointer lock (browsers require a user gesture)
   useEffect(() => {
-    if (isLocked && audioRef.current?.paused) audioRef.current.play().catch(() => {})
+    if (isLocked && audioRef.current?.paused)
+      audioRef.current.play().catch(() => {})
   }, [isLocked])
+
+  useEffect(() => {
+    if (!npcDialogue) return
+    const handleKey = e => {
+      if (e.code === 'KeyE' || e.code === 'Escape') {
+        setNpcDialogue(null)
+        window.removeEventListener('keydown', handleKey)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [npcDialogue])
 
   // Don't exit pointer lock when opening — keeps the lock so E can close and return directly
-  const openExhibit = (data) => setExhibit(data)
+  const openExhibit = data => setExhibit(data)
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
-  useEffect(() => {
-    if (!isLocked) setNpcDialogue(null)
-  }, [isLocked])
+  // useEffect(() => {
+  //   if (!isLocked) setNpcDialogue(null)
+  // }, [isLocked])
 
   return (
     <div style={{ width: '100%', height: '100vh', cursor: 'crosshair' }}>
@@ -88,7 +106,7 @@ export default function ModelViewer () {
             exhibits={exhibitData.filter(exhibit => exhibit.segmentID === 2)} // These will automatically flip to match the rotation
             triggers={triggerData.filter(tr => tr.segmentID === 2)}
           /> */}
-          <Tileset setDialogue={setDialogue} />
+          <Tileset setDialogue={setDialogue} setNpcDialogue={setNpcDialogue} />
 
           {lastCoords !== 'Click a surface to get coords' && (
             <mesh
@@ -101,36 +119,25 @@ export default function ModelViewer () {
             </mesh>
           )}
 
-          {npcData.map(npc => (
-            <group key={npc.url + npc.position.join(',')}>
-              <NPCModel
-                url={npc.url}
-                position={npc.position}
-                rotation={npc.rotation}
-                scale={npc.scale}
-                idleAnim={npc.idleAnim}
-              />
-              <NPCHitbox
-                position={npc.position}
-                onDialogue={() => { setNpcDialogue({ name: npc.name, text: npc.dialogue }); setDialogue(null) }}
-              />
-            </group>
-          ))}
-
           <mesh
             position={[5, 0.3, 0]}
             castShadow
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               openExhibit({
                 name: 'Red Ball',
-                description: 'A perfectly round crimson sphere. Its surface is smooth to the touch, yet it carries an inexplicable weight — as if it has witnessed things no object should.',
-                color: '#cc4444',
+                description:
+                  'A perfectly round crimson sphere. Its surface is smooth to the touch, yet it carries an inexplicable weight — as if it has witnessed things no object should.',
+                color: '#cc4444'
               })
             }}
           >
             <sphereGeometry args={[0.3, 32, 32]} />
-            <meshStandardMaterial color='#cc4444' roughness={0.4} metalness={0.2} />
+            <meshStandardMaterial
+              color='#cc4444'
+              roughness={0.4}
+              metalness={0.2}
+            />
           </mesh>
 
           <TableLoader
@@ -139,25 +146,39 @@ export default function ModelViewer () {
             rotation={[0, 2 * Math.PI, 0]}
             scale={1.5}
           />
-{/* 
+          {/* 
           <TriggerManager
             data={triggerData}
             onTriggerEnter={msg => { setDialogue(msg); setNpcDialogue(null) }}
             onTriggerExit={() => setDialogue(null)}
           /> */}
-
           <PointerLockControls
             ref={controlsRef}
             enabled={!exhibit}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked && !exhibit} npcPositions={npcData.map(n => n.position)} />
+          <CompassBridge setHeading={setHeading} />
+          <Controller
+            isLocked={isLocked && !exhibit}
+            npcPositions={npcData.map(n => n.position)}
+          />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
-      <ExhibitViewer exhibit={exhibit} onClose={() => setExhibit(null)} onResume={() => controlsRef.current?.lock()} />
+      <UI
+        lastCoords={lastCoords}
+        dialogue={dialogue}
+        npcDialogue={npcDialogue}
+        heading={heading}
+        isLocked={isLocked}
+        onResume={() => controlsRef.current?.lock()}
+      />
+      <ExhibitViewer
+        exhibit={exhibit}
+        onClose={() => setExhibit(null)}
+        onResume={() => controlsRef.current?.lock()}
+      />
     </div>
   )
 }

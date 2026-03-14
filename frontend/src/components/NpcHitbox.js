@@ -4,8 +4,8 @@ export default function NPCHitbox ({ position, onDialogue }) {
       position={[position[0], 1.0, position[2]]}
       onClick={(e) => { e.stopPropagation(); onDialogue() }}
     >
-      <boxGeometry args={[1, 2, 1]} />
-      <meshBasicMaterial transparent opacity={1} depthWrite={false} />
+      <boxGeometry args={[0.8, 4, 0.8]} />
+      <meshBasicMaterial transparent opacity={0.5} depthWrite={false} />
     </mesh>
   )
 }
