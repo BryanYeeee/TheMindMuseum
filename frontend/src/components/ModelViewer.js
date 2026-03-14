@@ -1,42 +1,41 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import {
-  PointerLockControls,
-  Environment,
-  ContactShadows
-} from '@react-three/drei'
+import { PointerLockControls, Environment } from '@react-three/drei'
 import { Suspense, useState } from 'react'
 import Model from './Model'
 import Controller from './Controller'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
+import TriggerManager from './TriggerManager'
+import UI from './UI'
+
+const triggerData = [
+  {
+    id: 3,
+    position: [10, 0, -5],
+    width: 5,
+    depth: 2,
+    message: 'You are walking through the narrow corridor.'
+  },
+  {
+    id: 4,
+    position: [-10, 0, 5],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  }
+]
+
 export default function ModelViewer () {
   const [lastCoords, setLastCoords] = useState('Click a surface to get coords')
+  const [dialogue, setDialogue] = useState(null)
+  const [isLocked, setIsLocked] = useState(false)
+
   return (
     <div style={{ width: '100%', height: '100vh', cursor: 'crosshair' }}>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          padding: '15px',
-          background: 'rgba(0,0,0,0.8)',
-          color: '#00ff00', // Neon green for that "dev" look
-          fontFamily: 'monospace',
-          borderRadius: '8px',
-          zIndex: 100,
-          pointerEvents: 'none', // Allows clicks to pass through to the canvas
-          border: '1px solid #333'
-        }}
-      >
-        <div style={{ fontSize: '10px', color: '#888', marginBottom: '5px' }}>
-          LAST CLICKED COORDS:
-        </div>
-        {lastCoords}
-      </div>
       <Canvas
-        shadows='basic' // Options: "basic", "percentage", "soft"
+        shadows='basic'
         camera={{ fov: 75, position: [0, 2.75, 5] }}
         onCreated={({ camera }) => {
           camera.lookAt(new THREE.Vector3(0, 2.75, 0))
@@ -60,7 +59,7 @@ export default function ModelViewer () {
             position={[2.8, 0, 0]}
             rotation={[0, Math.PI, 0]}
           />
-          {/* A small red glowing sphere that moves to your last click */}
+
           {lastCoords !== 'Click a surface to get coords' && (
             <mesh
               position={eval(
@@ -72,17 +71,21 @@ export default function ModelViewer () {
             </mesh>
           )}
 
-          <PointerLockControls />
+          <TriggerManager
+            data={triggerData}
+            onTriggerEnter={msg => setDialogue(msg)}
+            onTriggerExit={() => setDialogue(null)}
+          />
+
+          <PointerLockControls
+            onLock={() => setIsLocked(true)}
+            onUnlock={() => setIsLocked(false)}
+          />
           <Controller />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <div className='absolute top-5 left-1/2 -translate-x-1/2'>
-        Click the screen to lock mouse & use WASD to walk
-      </div>
-      <div className='text-4xl opacity-50 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
-        +
-      </div>
+      <UI lastCoords={lastCoords} dialogue={dialogue} isLocked={isLocked} />
     </div>
   )
 }
