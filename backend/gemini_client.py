@@ -52,8 +52,6 @@ RULES:
 
 Return a JSON object matching this exact structure:
 {{
-  "summary": "A concise summary of the key facts from the material",
-  "theme": "A short theme name for the world (e.g. 'Ancient Library', 'Enchanted Forest')",
   "artifacts": [
     {{
       "name": "Artifact Name",

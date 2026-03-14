@@ -12,8 +12,6 @@ class ArtifactSpec(BaseModel):
 
 class WorldDesign(BaseModel):
     """The world design returned by Gemini."""
-    summary: str
-    theme: str
     artifacts: list[ArtifactSpec]
 
 

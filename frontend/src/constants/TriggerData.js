@@ -10,7 +10,7 @@ const positions = {
 
 export const triggerData = [
   {
-    modelNumber: 1,
+    segmentID: 'tile-1-0',
     id: 3,
     position: positions[1],
     width: 5,
@@ -18,7 +18,7 @@ export const triggerData = [
     message: 'You are walking through the narrow corridor.'
   },
   {
-    modelNumber: 1,
+    segmentID: 'tile-1-0',
     id: 4,
     position: [-10, 0, 5],
     width: 5,
@@ -26,7 +26,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    modelNumber: 2,
+    segmentID: 'tile-0-1',
     id: 5,
     position: positions[1],
     width: 5,

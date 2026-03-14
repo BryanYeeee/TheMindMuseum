@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 
-export default function Controller({ speed = 0.1, sprintMultiplier = 2, isLocked = false }) {
+const NPC_RADIUS = 0.8;
+export default function Controller({ speed = 0.1, sprintMultiplier = 2, isLocked = false, npcPositions = []  }) {
   const { camera } = useThree();
   const [keys, setKeys] = useState({});
 
@@ -39,9 +40,21 @@ export default function Controller({ speed = 0.1, sprintMultiplier = 2, isLocked
       .multiplyScalar(currentSpeed) // Apply the calculated speed
       .applyQuaternion(camera.quaternion);
 
-    // Lock Y axis so we don't fly or sink
-    camera.position.x += direction.x;
-    camera.position.z += direction.z;
+    // Check each axis separately so the player can slide along an NPC
+    const nextX = camera.position.x + direction.x;
+    const nextZ = camera.position.z + direction.z;
+
+    const blockedX = npcPositions.some(([nx, , nz]) => {
+      const dx = nextX - nx, dz = camera.position.z - nz;
+      return Math.sqrt(dx * dx + dz * dz) < NPC_RADIUS;
+    });
+    const blockedZ = npcPositions.some(([nx, , nz]) => {
+      const dx = camera.position.x - nx, dz = nextZ - nz;
+      return Math.sqrt(dx * dx + dz * dz) < NPC_RADIUS;
+    });
+
+    if (!blockedX) camera.position.x = nextX;
+    if (!blockedZ) camera.position.z = nextZ;
   });
 
   return null;

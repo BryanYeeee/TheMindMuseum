@@ -6,8 +6,6 @@ import * as THREE from 'three'
 import ObjectModel from './ObjectModel'
 import PaintingModel from './PaintingModel'
 
-const TILE_WIDTH = 20;
-const TILE_DEPTH = 34.4; 
 
 export default function Model ({
   url,
@@ -66,6 +64,10 @@ export default function Model ({
   return (
     <group ref={groupRef} {...props}>
       <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color="#ff00ff" /> 
+      </mesh>
+      <mesh position={[-34.5, 0, 0]}>
         <sphereGeometry args={[0.15, 16, 16]} />
         <meshBasicMaterial color="#ff00ff" /> 
       </mesh>

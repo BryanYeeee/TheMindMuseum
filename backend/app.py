@@ -92,28 +92,31 @@ def _run_job(job_id: str, text: str, full_generation: bool = False):
         for i, artifact in enumerate(sorted_artifacts):
             # Dev mode: only generate the first model, rest get placeholder URLs
             if not full_generation and i >= 1:
-                artifact_results.append(ArtifactResult(
+                ar = ArtifactResult(
                     name=artifact.name,
                     lore=artifact.lore,
                     fact=artifact.fact,
                     model_url="",
-                ))
+                )
+                artifact_results.append(ar)
+                _emit(job_id, {"status": "artifact_ready", "index": i, "total": total,
+                                "artifact": ar.model_dump()})
                 continue
 
             _emit(job_id, {"status": "generating_models", "progress": f"{i}/{total}",
                             "message": f"Generating: {artifact.name}"})
             filename = generate_model(artifact.visual_description)
-            artifact_results.append(ArtifactResult(
+            ar = ArtifactResult(
                 name=artifact.name,
                 lore=artifact.lore,
                 fact=artifact.fact,
                 model_url=f"/api/models/{filename}",
-            ))
-            _emit(job_id, {"status": "generating_models", "progress": f"{i + 1}/{total}"})
+            )
+            artifact_results.append(ar)
+            _emit(job_id, {"status": "artifact_ready", "index": i, "total": total,
+                            "artifact": ar.model_dump()})
 
-        # Step 4: Assemble result
-        _emit(job_id, {"status": "assembling", "message": "Building world..."})
-
+        # Step 4: Complete
         result = JobResult(
             artifacts=artifact_results,
         )

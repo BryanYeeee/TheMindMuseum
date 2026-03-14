@@ -2,7 +2,7 @@
 
 import { Canvas } from '@react-three/fiber'
 import { PointerLockControls, Environment } from '@react-three/drei'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Model from './Model'
 import Controller from './Controller'
 import NPCModel from './Npcmodel'
@@ -23,6 +23,7 @@ export default function ModelViewer () {
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+  const controlsRef = useRef()
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
@@ -57,16 +58,16 @@ export default function ModelViewer () {
           {/* <Model
             url='/models/museum_interior/scene.gltf'
             setDialogue={setDialogue}
-            exhibits={exhibitData.filter(ex => ex.modelNumber === 1)}
-            triggers={triggerData.filter(tr => tr.modelNumber === 1)}
+            exhibits={exhibitData.filter(ex => ex.segmentID === 1)}
+            triggers={triggerData.filter(tr => tr.segmentID === 1)}
           /> */}
           {/* <Model
             url='/models/museum_interior/scene.gltf'
             setDialogue={setDialogue}
             position={[2.8, 0, 0]}
             rotation={[0, Math.PI, 0]}
-            exhibits={exhibitData.filter(exhibit => exhibit.modelNumber === 2)} // These will automatically flip to match the rotation
-            triggers={triggerData.filter(tr => tr.modelNumber === 2)}
+            exhibits={exhibitData.filter(exhibit => exhibit.segmentID === 2)} // These will automatically flip to match the rotation
+            triggers={triggerData.filter(tr => tr.segmentID === 2)}
           /> */}
           <Tileset setDialogue={setDialogue} />
 
@@ -92,9 +93,7 @@ export default function ModelViewer () {
               />
               <NPCHitbox
                 position={npc.position}
-                onDialogue={() =>
-                  setNpcDialogue({ name: npc.name, text: npc.dialogue })
-                }
+                onDialogue={() => { setNpcDialogue({ name: npc.name, text: npc.dialogue }); setDialogue(null) }}
               />
             </group>
           ))}
@@ -108,24 +107,20 @@ export default function ModelViewer () {
 {/* 
           <TriggerManager
             data={triggerData}
-            onTriggerEnter={msg => setDialogue(msg)}
+            onTriggerEnter={msg => { setDialogue(msg); setNpcDialogue(null) }}
             onTriggerExit={() => setDialogue(null)}
           /> */}
 
           <PointerLockControls
+            ref={controlsRef}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked} />
+          <Controller isLocked={isLocked} npcPositions={npcData.map(n => n.position)} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI
-        lastCoords={lastCoords}
-        dialogue={dialogue}
-        npcDialogue={npcDialogue}
-        isLocked={isLocked}
-      />
+      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
     </div>
   )
 }
