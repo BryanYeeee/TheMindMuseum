@@ -38,7 +38,8 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
   useEffect(() => {
     if (!exhibit) return
     const handleKey = (e) => {
-      if (e.code === 'KeyE') {
+      if (e.code === 'Tab') {
+        e.preventDefault()
         // E closes and stays in game — pointer lock is still active
         onClose()
       } else if (e.code === 'Escape') {
@@ -94,7 +95,7 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
 
           {/* Close hints */}
           <p className='absolute bottom-8 right-10 text-white/20 text-[9px] tracking-[0.2em] uppercase'>
-            E · Return to Game
+            Tab · Return to Game
           </p>
         </motion.div>
       )}

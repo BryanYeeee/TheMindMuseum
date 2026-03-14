@@ -20,6 +20,7 @@ export default function ModelViewer () {
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
   const [exhibit, setExhibit] = useState(null)
+  const [receptionistOpen, setReceptionistOpen] = useState(false)
   const controlsRef = useRef()
   const audioRef = useRef(null)
 
@@ -34,14 +35,19 @@ export default function ModelViewer () {
   // Close dialogue on E key
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.code === 'KeyE') {
+      if (e.code === 'Tab') {
+        e.preventDefault()
         setNpcDialogue(null)
         setDialogue(null)
+        if (receptionistOpen) {
+          setReceptionistOpen(false)
+          controlsRef.current?.lock()
+        }
       }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [])
+  }, [receptionistOpen])
 
   // Start music on first pointer lock (browsers require a user gesture)
   useEffect(() => {
@@ -53,8 +59,20 @@ export default function ModelViewer () {
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
-    if (!isLocked) setNpcDialogue(null)
-  }, [isLocked])
+    if (!isLocked && !receptionistOpen) setNpcDialogue(null)
+  }, [isLocked, receptionistOpen])
+
+  const handleNpcClick = (npc) => {
+    if (npc.name === 'Receptionist') {
+      setNpcDialogue(null)
+      setDialogue(null)
+      setReceptionistOpen(true)
+      controlsRef.current?.unlock()
+    } else {
+      setNpcDialogue({ name: npc.name, text: npc.dialogue })
+      setDialogue(null)
+    }
+  }
 
   return (
     <div style={{ width: '100%', height: '100vh', cursor: 'crosshair' }}>
@@ -106,15 +124,23 @@ export default function ModelViewer () {
           />
           <PointerLockControls
             ref={controlsRef}
-            enabled={!exhibit}
+            enabled={!exhibit && !receptionistOpen}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked && !exhibit} npcPositions={npcData.map(n => n.position)} />
+          <Controller isLocked={isLocked && !exhibit && !receptionistOpen} npcPositions={npcData.map(n => n.position)} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
+      <UI
+        lastCoords={lastCoords}
+        dialogue={dialogue}
+        npcDialogue={npcDialogue}
+        isLocked={isLocked}
+        onResume={() => controlsRef.current?.lock()}
+        receptionistOpen={receptionistOpen}
+        onCloseReceptionist={() => { setReceptionistOpen(false); controlsRef.current?.lock() }}
+      />
       <ExhibitViewer exhibit={exhibit} onClose={() => setExhibit(null)} onResume={() => controlsRef.current?.lock()} />
     </div>
   )

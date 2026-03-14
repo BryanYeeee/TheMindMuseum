@@ -205,4 +205,7 @@ def ask():
         return jsonify({"error": str(e)}), 500
 
 
-ingest_local_file('./ent.pdf')
+if os.path.exists('./ent.pdf'):
+    ingest_local_file('./ent.pdf')
+else:
+    print("⚠️  ./ent.pdf not found — skipping auto-ingest. Upload via /ingest endpoint.")

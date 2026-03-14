@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Design API – Debug Client</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+                }
+            }
+        </script>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                background: #0f1117;
+                color: #e2e4e9;
+                min-height: 100vh;
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 1.5rem;
+                color: #fff;
+            }
+            h2 {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+                color: #a0a5b5;
+            }
+
+            /* ---- Form ---- */
+            .form-section {
+                background: #1a1d27;
+                border: 1px solid #2a2d3a;
+                border-radius: 10px;
+                padding: 1.5rem;
+                max-width: 700px;
+                margin-bottom: 2rem;
+            }
+
+            label {
+                display: block;
+                font-size: 0.85rem;
+                color: #8b90a0;
+                margin-bottom: 0.3rem;
+                margin-top: 1rem;
+            }
+            label:first-child {
+                margin-top: 0;
+            }
+
+            textarea,
+            input[type="number"],
+            input[type="file"] {
+                width: 100%;
+                background: #12141c;
+                border: 1px solid #2a2d3a;
+                border-radius: 6px;
+                color: #e2e4e9;
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+                resize: vertical;
+            }
+            textarea {
+                min-height: 120px;
+            }
+
+            .or-divider {
+                text-align: center;
+                color: #555;
+                margin: 0.8rem 0;
+                font-size: 0.8rem;
+            }
+
+            button {
+                margin-top: 1.2rem;
+                padding: 0.65rem 1.6rem;
+                font-size: 0.9rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                background: #5865f2;
+                color: #fff;
+                transition: background 0.15s;
+            }
+            button:hover {
+                background: #4752c4;
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            /* ---- Log ---- */
+            #log {
+                background: #12141c;
+                border: 1px solid #2a2d3a;
+                border-radius: 8px;
+                padding: 1rem;
+                max-width: 700px;
+                max-height: 200px;
+                overflow-y: auto;
+                font-family: "Cascadia Code", "Fira Code", monospace;
+                font-size: 0.8rem;
+                line-height: 1.6;
+                margin-bottom: 2rem;
+                white-space: pre-wrap;
+                color: #8b90a0;
+            }
+            .log-ok {
+                color: #57f287;
+            }
+            .log-err {
+                color: #ed4245;
+            }
+            .log-info {
+                color: #5865f2;
+            }
+
+            /* ---- Artifact cards ---- */
+            #artifacts {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 1.5rem;
+                max-width: 1400px;
+            }
+
+            .artifact-card {
+                background: #1a1d27;
+                border: 1px solid #2a2d3a;
+                border-radius: 10px;
+                padding: 1.2rem;
+                transition: border-color 0.2s;
+            }
+            .artifact-card[data-status="complete"] {
+                border-color: #57f287;
+            }
+            .artifact-card[data-status="error"] {
+                border-color: #ed4245;
+            }
+
+            .artifact-card h3 {
+                font-size: 1rem;
+                margin-bottom: 0.4rem;
+                color: #fff;
+            }
+
+            .artifact-card .desc {
+                font-size: 0.85rem;
+                color: #a0a5b5;
+                margin-bottom: 0.5rem;
+            }
+
+            .artifact-card .visual-desc {
+                font-size: 0.78rem;
+                color: #6b7080;
+                font-style: italic;
+                margin-bottom: 0.5rem;
+            }
+
+            .badge {
+                display: inline-block;
+                padding: 0.15rem 0.55rem;
+                border-radius: 20px;
+                font-size: 0.72rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 0.75rem;
+            }
+            .badge-pending {
+                background: #2a2d3a;
+                color: #8b90a0;
+            }
+            .badge-generating_image {
+                background: #1e3a5f;
+                color: #5dadec;
+            }
+            .badge-generating_model {
+                background: #3b2f63;
+                color: #a78bfa;
+            }
+            .badge-complete {
+                background: #1a3d2a;
+                color: #57f287;
+            }
+            .badge-error {
+                background: #3d1a1a;
+                color: #ed4245;
+            }
+
+            .model-viewer {
+                width: 100%;
+                height: 220px;
+                background: #12141c;
+                border-radius: 6px;
+                margin-top: 0.6rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .model-viewer canvas {
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+            }
+
+            .download-link {
+                display: inline-block;
+                margin-top: 0.5rem;
+                font-size: 0.8rem;
+                color: #5865f2;
+                text-decoration: none;
+            }
+            .download-link:hover {
+                text-decoration: underline;
+            }
+
+            .error-msg {
+                color: #ed4245;
+                font-size: 0.8rem;
+                margin-top: 0.4rem;
+            }
+
+            /* Settings bar */
+            .settings-bar {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            .settings-bar label {
+                margin: 0;
+            }
+            .settings-bar input {
+                width: 320px;
+                background: #12141c;
+                border: 1px solid #2a2d3a;
+                border-radius: 6px;
+                color: #e2e4e9;
+                padding: 0.4rem 0.6rem;
+                font-size: 0.85rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🏛️ Design API – Debug Client</h1>
+
+        <div class="settings-bar">
+            <label for="api-base">Backend URL:</label>
+            <input id="api-base" type="text" value="http://localhost:5001" />
+        </div>
+
+        <div class="form-section">
+            <h2>Create Artifacts</h2>
+
+            <label for="num-artifacts">Number of artifacts</label>
+            <input
+                id="num-artifacts"
+                type="number"
+                min="1"
+                max="20"
+                value="3" />
+
+            <label for="text-input">Paste text content</label>
+            <textarea
+                id="text-input"
+                placeholder="Paste your text here..."></textarea>
+
+            <div class="or-divider">— or upload a PDF —</div>
+
+            <label for="pdf-input">Upload PDF file</label>
+            <input id="pdf-input" type="file" accept=".pdf" />
+
+            <button id="submit-btn">Generate Artifacts</button>
+        </div>
+
+        <h2>Event Log</h2>
+        <div id="log"></div>
+
+        <h2>Artifacts</h2>
+        <div id="artifacts"></div>
+
+        <script type="module">
+            import * as THREE from "three";
+            import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+            const $ = (s) => document.querySelector(s);
+            const logEl = $("#log");
+            const artifactsEl = $("#artifacts");
+            const submitBtn = $("#submit-btn");
+
+            // ---- Logging ----
+            function log(msg, cls = "") {
+                const span = document.createElement("span");
+                span.className = cls;
+                span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+                logEl.appendChild(span);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            function getBase() {
+                return $("#api-base").value.replace(/\/+$/, "");
+            }
+
+            // ---- Submit ----
+            submitBtn.addEventListener("click", async () => {
+                const base = getBase();
+                const numArtifacts = parseInt($("#num-artifacts").value, 10);
+                const text = $("#text-input").value.trim();
+                const pdfFile = $("#pdf-input").files[0];
+
+                if (!text && !pdfFile) {
+                    log("Provide either text or a PDF file.", "log-err");
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                artifactsEl.innerHTML = "";
+                log(
+                    `POST ${base}/design  (num_artifacts=${numArtifacts})`,
+                    "log-info",
+                );
+
+                try {
+                    const formData = new FormData();
+                    formData.append("num_artifacts", numArtifacts);
+                    if (pdfFile) {
+                        formData.append("file", pdfFile);
+                    } else {
+                        formData.append("text", text);
+                    }
+
+                    const resp = await fetch(`${base}/design`, {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok) {
+                        log(
+                            `Error ${resp.status}: ${data.error || JSON.stringify(data)}`,
+                            "log-err",
+                        );
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    log(`Job created: ${data.job_id}`, "log-ok");
+                    log(
+                        `Received ${data.artifacts.length} artifacts`,
+                        "log-ok",
+                    );
+
+                    renderArtifacts(data.artifacts);
+                    connectSSE(data.job_id);
+                } catch (err) {
+                    log(`Request failed: ${err}`, "log-err");
+                    submitBtn.disabled = false;
+                }
+            });
+
+            // ---- Render artifacts ----
+            function renderArtifacts(artifacts) {
+                artifactsEl.innerHTML = "";
+                for (const a of artifacts) {
+                    const card = document.createElement("div");
+                    card.className = "artifact-card";
+                    card.id = `card-${a.id}`;
+                    card.dataset.status = a.status;
+                    card.innerHTML = `
+          <span class="badge badge-${a.status}">${a.status}</span>
+          <h3>${esc(a.name)}</h3>
+          <p class="desc">${esc(a.description)}</p>
+          <p class="visual-desc">${esc(a.visual_description)}</p>
+          <div class="model-viewer" id="viewer-${a.id}"></div>
+        `;
+                    artifactsEl.appendChild(card);
+                }
+            }
+
+            // ---- SSE ----
+            function connectSSE(jobId) {
+                const base = getBase();
+                const url = `${base}/design/stream/${jobId}`;
+                log(`SSE connecting → ${url}`, "log-info");
+
+                const evtSource = new EventSource(url);
+
+                evtSource.addEventListener("artifact_update", (e) => {
+                    const d = JSON.parse(e.data);
+                    log(
+                        `artifact_update: ${d.name} → ${d.status}${d.model_url ? " (" + d.model_url + ")" : ""}`,
+                        d.status === "error" ? "log-err" : "log-info",
+                    );
+                    updateCard(d);
+                });
+
+                evtSource.addEventListener("job_complete", (e) => {
+                    log("✅ Job complete!", "log-ok");
+                    evtSource.close();
+                    submitBtn.disabled = false;
+                });
+
+                evtSource.onerror = (err) => {
+                    log("SSE connection error", "log-err");
+                    evtSource.close();
+                    submitBtn.disabled = false;
+                };
+            }
+
+            // ---- Update a single card ----
+            function updateCard(d) {
+                const card = document.getElementById(`card-${d.id}`);
+                if (!card) return;
+
+                card.dataset.status = d.status;
+
+                // Update badge
+                const badge = card.querySelector(".badge");
+                badge.className = `badge badge-${d.status}`;
+                badge.textContent = d.status;
+
+                // Show error
+                if (d.status === "error" && d.error) {
+                    let errEl = card.querySelector(".error-msg");
+                    if (!errEl) {
+                        errEl = document.createElement("p");
+                        errEl.className = "error-msg";
+                        card.appendChild(errEl);
+                    }
+                    errEl.textContent = d.error;
+                }
+
+                // Load 3D model
+                if (d.status === "complete" && d.model_url) {
+                    const base = getBase();
+                    const fullUrl = `${base}${d.model_url}`;
+                    loadGLBModel(`viewer-${d.id}`, fullUrl);
+
+                    // Add download link
+                    let dl = card.querySelector(".download-link");
+                    if (!dl) {
+                        dl = document.createElement("a");
+                        dl.className = "download-link";
+                        dl.target = "_blank";
+                        card.appendChild(dl);
+                    }
+                    dl.href = fullUrl;
+                    dl.textContent = "⬇ Download .glb";
+                }
+            }
+
+            // ---- Three.js GLB viewer ----
+            const viewers = {};
+
+            function loadGLBModel(containerId, url) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (viewers[containerId]) return; // already loaded
+
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x12141c);
+
+                const camera = new THREE.PerspectiveCamera(
+                    45,
+                    w / h,
+                    0.01,
+                    100,
+                );
+                camera.position.set(0, 0.5, 2);
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(w, h);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+                container.appendChild(renderer.domElement);
+
+                const controls = new OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 3;
+
+                // Lights
+                scene.add(new THREE.AmbientLight(0xffffff, 1));
+                const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                dirLight.position.set(3, 4, 5);
+                scene.add(dirLight);
+
+                const loader = new GLTFLoader();
+                loader.load(
+                    url,
+                    (gltf) => {
+                        const model = gltf.scene;
+                        // Centre and scale
+                        const box = new THREE.Box3().setFromObject(model);
+                        const size = box.getSize(new THREE.Vector3());
+                        const center = box.getCenter(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 1.2 / maxDim;
+                        model.scale.setScalar(scale);
+                        model.position.sub(center.multiplyScalar(scale));
+                        scene.add(model);
+                        log(`GLB loaded in viewer: ${containerId}`, "log-ok");
+                    },
+                    undefined,
+                    (err) => log(`GLB load error: ${err}`, "log-err"),
+                );
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                viewers[containerId] = { scene, camera, renderer, controls };
+
+                // Resize handling
+                const ro = new ResizeObserver(() => {
+                    const nw = container.clientWidth;
+                    const nh = container.clientHeight;
+                    camera.aspect = nw / nh;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(nw, nh);
+                });
+                ro.observe(container);
+            }
+
+            function esc(s) {
+                const d = document.createElement("div");
+                d.textContent = s || "";
+                return d.innerHTML;
+            }
+        </script>
+    </body>
+</html>
