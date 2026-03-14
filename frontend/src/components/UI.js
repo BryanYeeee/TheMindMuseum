@@ -70,7 +70,7 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
             {/* TOP LEFT: BRANDING */}
             <motion.div className='absolute top-12 left-12 border-l border-amber-600 pl-5 py-1'>
               <h1 className='text-2xl tracking-[0.35em] uppercase font-light text-white italic'>
-                The  Grand  Gallery
+                The  Mind  Museum
               </h1>
               <p className='text-amber-600 text-[9px] tracking-[0.2em] uppercase font-sans mt-1 font-bold'>
                 Live Observation
