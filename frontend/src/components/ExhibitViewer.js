@@ -1,18 +1,35 @@
 'use client'
 import { useRef, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { useGLTF, useTexture } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function RotatingMesh ({ color }) {
+function ViewerObject ({ url }) {
   const ref = useRef()
+  const { scene } = url ? useGLTF(url) : { scene: null }
   useFrame((_, delta) => {
-    ref.current.rotation.y += delta * 0.6
-    ref.current.rotation.x += delta * 0.15
+    if (ref.current) ref.current.rotation.y += delta * 0.6
   })
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[1.2, 64, 64]} />
-      <meshStandardMaterial color={color} roughness={0.4} metalness={0.2} />
+    <group ref={ref}>
+      {scene
+        ? <primitive object={scene.clone()} />
+        : (
+          <mesh>
+            <boxGeometry args={[1.5, 1.5, 1.5]} />
+            <meshStandardMaterial color='#888888' roughness={0.4} metalness={0.3} />
+          </mesh>
+        )}
+    </group>
+  )
+}
+
+function ViewerPainting ({ url }) {
+  const texture = useTexture(url || '/images/placeholder.png')
+  return (
+    <mesh>
+      <planeGeometry args={[2.52, 1.62]} />
+      <meshStandardMaterial map={texture} />
     </mesh>
   )
 }
@@ -21,7 +38,8 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
   useEffect(() => {
     if (!exhibit) return
     const handleKey = (e) => {
-      if (e.code === 'KeyE') {
+      if (e.code === 'Tab') {
+        e.preventDefault()
         // E closes and stays in game — pointer lock is still active
         onClose()
       } else if (e.code === 'Escape') {
@@ -47,13 +65,15 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
           {/* scanline overlay */}
           <div className='absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.06)_2px,rgba(0,0,0,0.06)_4px)] pointer-events-none' />
 
-          {/* Left — rotating 3D model */}
+          {/* Left — exhibit display */}
           <div className='w-1/2 h-full'>
             <Canvas camera={{ position: [0, 0, 4], fov: 50 }}>
               <ambientLight intensity={0.3} />
               <directionalLight position={[5, 8, 5]} intensity={2.5} />
               <pointLight position={[-4, -4, -4]} intensity={0.8} color='#f59e0b' />
-              <RotatingMesh color={exhibit.color ?? '#cc4444'} />
+              {exhibit.type === 'painting'
+                ? <ViewerPainting url={exhibit.url} />
+                : <ViewerObject url={exhibit.url} />}
             </Canvas>
           </div>
 
@@ -75,7 +95,7 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
 
           {/* Close hints */}
           <p className='absolute bottom-8 right-10 text-white/20 text-[9px] tracking-[0.2em] uppercase'>
-            E · Return to Game
+            Tab · Return to Game
           </p>
         </motion.div>
       )}

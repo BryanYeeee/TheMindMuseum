@@ -1,11 +1,10 @@
 'use client'
 import Model from './Model'
 import { exhibitData } from '@/constants/ExhibitData'
-import { npcData } from '@/constants/NpcData'
 import { triggerData } from '@/constants/TriggerData'
 
 const MAP = [
-  [0, 4],
+  // [0, 4],
   [1, 2],
   [1, 2],
   [1, 2],
@@ -39,7 +38,7 @@ const MODEL = (xIndex, zIndex) => {
   }
 }
 
-export default function Tileset ({ setDialogue, setNpcDialogue }) {
+export default function Tileset ({ setDialogue, openExhibit }) {
   return (
     <>
       {MAP.map((row, zIndex) =>
@@ -54,9 +53,8 @@ export default function Tileset ({ setDialogue, setNpcDialogue }) {
               position={POSITIONS(xIndex, zIndex)[tileType]}
               rotation={ROTATIONS[tileType]}
               setDialogue={setDialogue}
-              setNpcDialogue={setNpcDialogue}
+              openExhibit={openExhibit}
               mirrored={zIndex % 2 == 0}
-              npcData={npcData.filter(npc => npc.segmentID === segmentID)}
               exhibits={exhibitData.filter(ex => ex.segmentID === segmentID)}
               triggers={triggerData.filter(tr => tr.segmentID === segmentID)}
             />
