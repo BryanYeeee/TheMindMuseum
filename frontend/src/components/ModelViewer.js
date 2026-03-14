@@ -1,33 +1,32 @@
 // components/ModelViewer.js
-"use client"; // Required for Next.js App Router
+"use client";
 
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stage, PerspectiveCamera } from '@react-three/drei';
-import { Suspense } from 'react';
-import Model from './Model';
+import { Canvas } from "@react-three/fiber";
+import { PointerLockControls, Environment } from "@react-three/drei";
+import { Suspense } from "react";
+import Model from "./Model";
+import Controller from "./Controller";
 
-export default function ModelViewer({ url }) {
+export default function ModelViewer() {
   return (
-    <div style={{ width: '100%', height: '100%', background: '#111' }}>
-      <Canvas shadows dpr={[1, 2]}>
+    <div style={{ width: "100%", height: "100vh", cursor: "crosshair" }}>
+      <Canvas shadows camera={{ fov: 75, position: [0, 1.7, 5] }}>
         <Suspense fallback={null}>
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+          <Environment preset="city" />
+          <ambientLight intensity={0.5} />
           
-          {/* Stage provides preset lighting and environment */}
-          <Stage environment="city" intensity={0.6}>
-            <Model url={url} />
-          </Stage>
-
-          {/* Allows user to rotate/zoom the model */}
-          <OrbitControls 
-            makeDefault 
-            enablePan={true} 
-            enableZoom={true} 
-            minPolarAngle={0} 
-            maxPolarAngle={Math.PI / 1.75} 
-          />
+          <Model url="/models/museum_interior/scene.gltf" />
+          
+          {/* Mouse for looking around */}
+          <PointerLockControls /> 
+          
+          {/* WASD for walking */}
+          <Controller />
         </Suspense>
       </Canvas>
+      <div style={{ position: 'absolute', top: 20, left: 20, color: 'white' }}>
+        Click the screen to lock mouse & use WASD to walk
+      </div>
     </div>
   );
 }
