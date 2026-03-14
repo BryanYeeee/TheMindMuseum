@@ -64,7 +64,13 @@
         <div id="pdfName" style="font-size:12px;color:#888;margin-top:4px;"></div>
       </div>
 
-      <button id="sendBtn" onclick="sendRequest()">Generate World</button>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
+        <button id="sendBtn" onclick="sendRequest()">Generate World</button>
+        <label style="font-size:12px;color:#9cdcfe;cursor:pointer;">
+          <input type="checkbox" id="fullGeneration" style="margin-right:4px;" />
+          Full generation (all 14 models — costs more)
+        </label>
+      </div>
     </div>
 
     <div class="col">
@@ -121,10 +127,12 @@
       let body;
       let headers = {};
 
+      const fullGen = document.getElementById('fullGeneration').checked;
+
       if (currentTab === 'text') {
         const text = document.getElementById('textInput').value.trim();
         if (!text) { alert('Enter some text'); btn.disabled = false; setBadge('idle', 'idle'); return; }
-        body = JSON.stringify({ text });
+        body = JSON.stringify({ text, full_generation: fullGen });
         headers['Content-Type'] = 'application/json';
       } else {
         const file = document.getElementById('pdfInput').files[0];
@@ -134,7 +142,8 @@
       }
 
       try {
-        const res = await fetch(`${base}/api/generate-world`, {
+        const url = `${base}/api/generate-world` + (currentTab !== 'text' && fullGen ? '?full_generation=true' : '');
+        const res = await fetch(url, {
           method: 'POST',
           headers: currentTab === 'text' ? headers : {},
           body

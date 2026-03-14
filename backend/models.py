@@ -23,11 +23,8 @@ class ArtifactResult(BaseModel):
     lore: str
     fact: str
     model_url: str
-    position_index: int
 
 
 class JobResult(BaseModel):
     """Final result sent to the client."""
-    summary: str
-    theme: str
     artifacts: list[ArtifactResult]

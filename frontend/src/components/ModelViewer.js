@@ -5,6 +5,7 @@ import { PointerLockControls, Environment } from '@react-three/drei'
 import { Suspense, useState } from 'react'
 import Model from './Model'
 import Controller from './Controller'
+import NPCModel from './Npcmodel'  
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
@@ -70,6 +71,14 @@ export default function ModelViewer () {
               <meshBasicMaterial color='red' />
             </mesh>
           )}
+          <NPCModel
+            url="/models/happy_joe.fbx"
+            position={[-5, 0, -7]}
+            rotation={[0, 2.5, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+            onClick={() => openDialogue('happy_joe')}  // your own handler
+          />
 
           <TriggerManager
             data={triggerData}

@@ -1,8 +1,10 @@
 """
 Gemini API wrapper — sends structured prompts and parses responses
 into validated Pydantic models using the google-genai SDK.
+Also handles image generation from visual descriptions.
 """
 
+import base64
 import json
 import os
 
@@ -132,3 +134,41 @@ def design_world(text: str) -> WorldDesign:
 
     # All retries exhausted — raise with last error context
     raise RuntimeError(f"Gemini failed to produce valid output after {MAX_RETRIES} attempts. Last error: {error_context}")
+
+
+def generate_image(visual_description: str) -> bytes:
+    """
+    Use Gemini to generate an image from a visual description.
+
+    Args:
+        visual_description: A text description of the artifact's appearance.
+
+    Returns:
+        Raw PNG image bytes.
+
+    Raises:
+        RuntimeError: If image generation fails.
+    """
+    client = _get_client()
+
+    prompt = (
+        "Generate a clean, high-quality image of a single 3D object on a plain white background. "
+        "The object should be centered and well-lit, suitable for 3D model generation. "
+        "No text, no labels, no watermarks.\n\n"
+        f"Object description: {visual_description}"
+    )
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-exp",
+        contents=prompt,
+        config=genai_types.GenerateContentConfig(
+            response_modalities=["image", "text"],
+        ),
+    )
+
+    # Extract image data from response parts
+    for part in response.candidates[0].content.parts:
+        if hasattr(part, "inline_data") and part.inline_data is not None:
+            return part.inline_data.data
+
+    raise RuntimeError("Gemini did not return an image in the response")
