@@ -202,7 +202,7 @@ export default function ModelViewer () {
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked} />
+          <Controller isLocked={isLocked} npcPositions={npcData.map(n => n.position)} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
