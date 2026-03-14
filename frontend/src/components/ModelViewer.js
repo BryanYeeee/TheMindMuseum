@@ -153,7 +153,7 @@ export default function ModelViewer () {
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller />
+          <Controller isLocked={isLocked} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>

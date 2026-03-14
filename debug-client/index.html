@@ -41,11 +41,11 @@
 <body>
   <h1>🛠 Debug — Generate World <span id="statusBadge" class="status-badge idle">idle</span></h1>
 
-  <div class="api-url">Backend: <span id="apiBase">http://localhost:5000</span></div>
+  <div class="api-url">Backend: <span id="apiBase">http://localhost:5001</span></div>
 
   <div class="section">
     <label>Custom backend URL (optional):</label>
-    <input type="text" id="backendUrl" placeholder="http://localhost:5000" style="background:#2d2d2d;color:#d4d4d4;border:1px solid #444;padding:4px 8px;font-family:monospace;font-size:12px;width:300px;border-radius:4px;" />
+    <input type="text" id="backendUrl" placeholder="http://localhost:5001" style="background:#2d2d2d;color:#d4d4d4;border:1px solid #444;padding:4px 8px;font-family:monospace;font-size:12px;width:300px;border-radius:4px;" />
   </div>
 
   <div class="row">
@@ -93,7 +93,7 @@
     }
 
     function getBase() {
-      return document.getElementById('backendUrl').value.trim() || 'http://localhost:5000';
+      return document.getElementById('backendUrl').value.trim() || 'http://localhost:5001';
     }
 
     function setBadge(state, label) {
