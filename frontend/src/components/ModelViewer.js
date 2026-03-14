@@ -2,10 +2,10 @@
 
 import { Canvas } from '@react-three/fiber'
 import { PointerLockControls, Environment } from '@react-three/drei'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Model from './Model'
 import Controller from './Controller'
-import NPCModel from './Npcmodel'
+import NPCModel from './NpcModel'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
@@ -121,6 +121,7 @@ export default function ModelViewer () {
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+  const controlsRef = useRef()
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
@@ -177,7 +178,7 @@ export default function ModelViewer () {
               />
               <NPCHitbox
                 position={npc.position}
-                onDialogue={() => setNpcDialogue({ name: npc.name, text: npc.dialogue })}
+                onDialogue={() => { setNpcDialogue({ name: npc.name, text: npc.dialogue }); setDialogue(null) }}
               />
             </group>
           ))}
@@ -192,19 +193,20 @@ export default function ModelViewer () {
 
           <TriggerManager
             data={triggerData}
-            onTriggerEnter={msg => setDialogue(msg)}
+            onTriggerEnter={msg => { setDialogue(msg); setNpcDialogue(null) }}
             onTriggerExit={() => setDialogue(null)}
           />
 
           <PointerLockControls
+            ref={controlsRef}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked} />
+          <Controller isLocked={isLocked} npcPositions={npcData.map(n => n.position)} />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} />
+      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
     </div>
   )
 }
