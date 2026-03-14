@@ -2,10 +2,10 @@
 
 import { Canvas } from '@react-three/fiber'
 import { PointerLockControls, Environment } from '@react-three/drei'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Model from './Model'
 import Controller from './Controller'
-import NPCModel from './Npcmodel'
+import NPCModel from './NpcModel'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
@@ -121,6 +121,7 @@ export default function ModelViewer () {
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+  const controlsRef = useRef()
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
@@ -197,6 +198,7 @@ export default function ModelViewer () {
           />
 
           <PointerLockControls
+            ref={controlsRef}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
@@ -204,7 +206,7 @@ export default function ModelViewer () {
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} />
+      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} onResume={() => controlsRef.current?.lock()} />
     </div>
   )
 }
