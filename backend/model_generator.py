@@ -26,7 +26,9 @@ HUNYUAN3D_POLL_INTERVAL = 3  # seconds between status checks
 
 def _get_hunyuan3d_url() -> str:
     """Get the Hunyuan3D API base URL from environment."""
-    url = os.environ.get("HUNYUAN3D_API_URL", "http://localhost:8081")
+    url = os.environ.get("HUNYUAN3D_API_URL")
+    if not url:
+        raise RuntimeError("HUNYUAN3D_API_URL environment variable is not set. Set it to your Vast.ai instance URL (e.g. http://<ip>:<port>)")
     return url.rstrip("/")
 
 
