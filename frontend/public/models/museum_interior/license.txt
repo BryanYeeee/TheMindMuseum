@@ -1,0 +1,11 @@
+Model Information:
+* title:	Museum_[interior]
+* source:	https://sketchfab.com/3d-models/museum-interior-8d2f994817d04df0b80eff0c9d8dd8d9
+* author:	Comicaroid (https://sketchfab.com/yuuuusukeeee)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Museum_[interior]" (https://sketchfab.com/3d-models/museum-interior-8d2f994817d04df0b80eff0c9d8dd8d9) by Comicaroid (https://sketchfab.com/yuuuusukeeee) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
