@@ -1,7 +1,7 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function UI ({ lastCoords, dialogue, isLocked }) {
+export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked }) {
   return (
     <div className='fixed inset-0 pointer-events-none select-none font-serif text-white z-50'>
       <AnimatePresence mode='sync'>
@@ -98,9 +98,51 @@ export default function UI ({ lastCoords, dialogue, isLocked }) {
                 </span>
                 <span className='text-[10px] tracking-widest'>MOUSE</span>
               </div>
+              <div className='flex flex-col gap-1'>
+                <span className='text-[8px] text-white/60 tracking-[0.2em] uppercase font-bold'>
+                  Interact
+                </span>
+                <span className='text-[10px] tracking-widest'>CLICK</span>
+              </div>
             </div>
 
-            {/* DIALOGUE: FLOATING PLAQUE */}
+            {/* NPC DIALOGUE BOX */}
+            <AnimatePresence>
+              {npcDialogue && (
+                <motion.div
+                  key='npc-dialogue'
+                  initial={{ y: 40, opacity: 0, x: '-50%' }}
+                  animate={{ y: 0, opacity: 1, x: '-50%' }}
+                  exit={{ y: 30, opacity: 0, x: '-50%' }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className='absolute bottom-24 left-1/2 w-full max-w-2xl'
+                >
+                  <div className='mx-6 bg-black/70 backdrop-blur-xl border border-amber-600/30 shadow-2xl'>
+                    {/* Name plate */}
+                    <div className='px-8 pt-5 pb-2 border-b border-amber-600/20 flex items-center gap-3'>
+                      <div className='w-1 h-4 bg-amber-600' />
+                      <span className='text-amber-500 text-[11px] tracking-[0.4em] uppercase font-sans font-bold'>
+                        {npcDialogue.name}
+                      </span>
+                    </div>
+                    {/* Dialogue text */}
+                    <div className='px-8 py-5'>
+                      <p className='text-white/90 text-base font-light leading-relaxed'>
+                        "{npcDialogue.text}"
+                      </p>
+                    </div>
+                    {/* Dismiss hint */}
+                    <div className='px-8 pb-4 text-right'>
+                      <span className='text-white/20 text-[9px] tracking-[0.3em] uppercase font-sans'>
+                        ESC to dismiss
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* TRIGGER DIALOGUE: FLOATING PLAQUE */}
             <AnimatePresence>
               {dialogue && (
                 <motion.div

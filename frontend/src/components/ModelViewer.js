@@ -2,10 +2,10 @@
 
 import { Canvas } from '@react-three/fiber'
 import { PointerLockControls, Environment } from '@react-three/drei'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Model from './Model'
 import Controller from './Controller'
-import NPCModel from './Npcmodel'  
+import NPCModel from './Npcmodel'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 import TriggerManager from './TriggerManager'
@@ -29,10 +29,103 @@ const triggerData = [
   }
 ]
 
+const npcData = [
+  {
+    url: '/models/happy_joe.fbx',
+    position: [-5, 0, -7],
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    url: '/models/lebron.fbx',
+    position: [-9.5, 0, 1.5],
+    rotation: [0, 4, 0],
+    scale: 0.0195,
+    idleAnim: 'mixamo.com',
+    name: 'Lebron',
+    dialogue: "I'm not just here for the art. I'm here for the culture. Also, have you seen the gift shop?",
+  },
+  {
+    url: '/models/happy_guy.fbx',
+    position: [24.5, 0, 5.5],
+    rotation: [0, -1, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Visitor',
+    dialogue: "Incredible, isn't it? I've been coming here every weekend for the past three years. Still haven't figured out what that sculpture is supposed to mean.",
+  },
+  {
+    url: '/models/happy_person.fbx',
+    position: [8, 0, 5.5],
+    rotation: [0, -0.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Gallery Guest',
+    dialogue: "Oh! Sorry, I didn't see you there. I was just admiring the lighting in this room. Very dramatic, don't you think?",
+  },
+  {
+    url: '/models/yes.fbx',
+    position: [12.5, 0, -1.2],
+    rotation: [0, -0.5, 0],
+    scale: 0.0085,
+    idleAnim: 'mixamo.com',
+    name: 'Curator',
+    dialogue: "Yes, yes, excellent eye. This piece dates back to... well, I don't actually know. The placard fell off last Tuesday.",
+  },
+  {
+    url: '/models/talking.fbx',
+    position: [12.5, 0, 1.2],
+    rotation: [0, 3.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Art Critic',
+    dialogue: "You see, the juxtaposition of form and negative space here creates a dialogue between the observer and the observed. Or maybe it's just a vase. Hard to say.",
+  },
+  {
+    url: '/models/jody.fbx',
+    position: [-21.5, 0, -5.5],
+    rotation: [0, 2, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Jody',
+    dialogue: "Psst — between you and me, the best exhibit is in the back room. They keep it hidden because it's too powerful.",
+  },
+  {
+    url: '/models/reception.fbx',
+    position: [1.2, 0, -6.75],
+    rotation: [0, 0, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Receptionist',
+    dialogue: "Good day! Audio guides are $5, maps are free. Please don't touch the exhibits. Or the walls. Or the floor, if you can help it.",
+  },
+]
+
+function NPCHitbox ({ position, onDialogue }) {
+  return (
+    <mesh
+      position={[position[0], 1.0, position[2]]}
+      onClick={(e) => { e.stopPropagation(); onDialogue() }}
+    >
+      <boxGeometry args={[1, 2, 1]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
+  )
+}
+
 export default function ModelViewer () {
   const [lastCoords, setLastCoords] = useState('Click a surface to get coords')
   const [dialogue, setDialogue] = useState(null)
+  const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+
+  // Clear NPC dialogue when the player pauses (pointer unlock)
+  useEffect(() => {
+    if (!isLocked) setNpcDialogue(null)
+  }, [isLocked])
 
   return (
     <div style={{ width: '100%', height: '100vh', cursor: 'crosshair' }}>
@@ -72,61 +165,22 @@ export default function ModelViewer () {
               <meshBasicMaterial color='red' />
             </mesh>
           )}
-          <NPCModel
-            url="/models/happy_joe.fbx"
-            position={[-5, 0, -7]}
-            rotation={[0, 2.5, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
 
-          <NPCModel
-            url="/models/lebron.fbx"
-            position={[-9.5, 0, 1.5]}
-            rotation={[0, 4, 0]}
-            scale={0.0195}
-            idleAnim="mixamo.com"
-          />
-
-          <NPCModel
-            url="/models/happy_guy.fbx"
-            position={[24.5, 0, 5.5]}
-            rotation={[0, -1, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
-
-          <NPCModel
-            url="/models/happy_person.fbx"
-            position={[8, 0, 5.5]}
-            rotation={[0, -0.5, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
-
-          <NPCModel
-            url="/models/yes.fbx"
-            position={[12.5, 0, -1.2]}
-            rotation={[0, -0.5, 0]}
-            scale={0.0085}
-            idleAnim="mixamo.com"
-          />
-
-          <NPCModel
-            url="/models/talking.fbx"
-            position={[12.5, 0, 1.2]}
-            rotation={[0, 3.5, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
-
-          <NPCModel
-            url="/models/jody.fbx"
-            position={[-21.5, 0, -5.5]}
-            rotation={[0, 2, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
+          {npcData.map((npc) => (
+            <group key={npc.url + npc.position.join(',')}>
+              <NPCModel
+                url={npc.url}
+                position={npc.position}
+                rotation={npc.rotation}
+                scale={npc.scale}
+                idleAnim={npc.idleAnim}
+              />
+              <NPCHitbox
+                position={npc.position}
+                onDialogue={() => setNpcDialogue({ name: npc.name, text: npc.dialogue })}
+              />
+            </group>
+          ))}
 
           <TableLoader
             url={'/models/reception_counter/scene.gltf'}
@@ -135,13 +189,6 @@ export default function ModelViewer () {
             scale={1.5}
           />
 
-          <NPCModel
-            url="/models/reception.fbx"
-            position={[1.2, 0, -6.75]}
-            rotation={[0, 0, 0]}
-            scale={0.019}
-            idleAnim="mixamo.com"
-          />
 
           <TriggerManager
             data={triggerData}
@@ -157,7 +204,7 @@ export default function ModelViewer () {
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
-      <UI lastCoords={lastCoords} dialogue={dialogue} isLocked={isLocked} />
+      <UI lastCoords={lastCoords} dialogue={dialogue} npcDialogue={npcDialogue} isLocked={isLocked} />
     </div>
   )
 }
