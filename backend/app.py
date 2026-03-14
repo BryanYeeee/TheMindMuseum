@@ -14,7 +14,16 @@ from gemini_client import design_world
 from model_generator import generate_model, GENERATED_MODELS_DIR
 
 app = Flask(__name__, static_folder="static")
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
 CORS(app)
+
+MAX_TEXT_CHARS = 500_000  # ~125K tokens — safe margin for Gemini context window
+
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({"error": "File too large. Maximum upload size is 16 MB."}), 413
+
 
 # ---------------------------------------------------------------------------
 # In-memory job store
@@ -48,6 +57,10 @@ def _extract_text_from_request() -> tuple[str | None, tuple | None]:
     if not text or not text.strip():
         return None, (jsonify({"error": "No text or PDF provided"}), 400)
 
+    # Truncate to stay within Gemini's context window
+    if len(text) > MAX_TEXT_CHARS:
+        text = text[:MAX_TEXT_CHARS]
+
     return text, None
 
 
@@ -63,19 +76,21 @@ def _run_job(job_id: str, text: str):
         _emit(job_id, {"status": "summarizing", "message": "Analyzing input with Gemini..."})
         world_design = design_world(text)
 
-        # Step 2: Generate 3D models for each artifact
-        total = len(world_design.artifacts)
+        # Step 2: Sort artifacts by position_index (importance order)
+        sorted_artifacts = sorted(world_design.artifacts, key=lambda a: a.position_index)
+
+        # Step 3: Generate 3D models for each artifact
+        total = len(sorted_artifacts)
         _emit(job_id, {"status": "generating_models", "progress": f"0/{total}"})
 
         artifact_results: list[ArtifactResult] = []
-        for i, artifact in enumerate(world_design.artifacts):
+        for i, artifact in enumerate(sorted_artifacts):
             filename = generate_model(artifact.visual_description)
             artifact_results.append(ArtifactResult(
                 name=artifact.name,
                 lore=artifact.lore,
                 fact=artifact.fact,
                 model_url=f"/api/models/{filename}",
-                position_index=artifact.position_index,
             ))
             _emit(job_id, {"status": "generating_models", "progress": f"{i + 1}/{total}"})
 
@@ -83,8 +98,6 @@ def _run_job(job_id: str, text: str):
         _emit(job_id, {"status": "assembling", "message": "Building world..."})
 
         result = JobResult(
-            summary=world_design.summary,
-            theme=world_design.theme,
             artifacts=artifact_results,
         )
 
