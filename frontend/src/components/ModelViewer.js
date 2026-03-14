@@ -9,6 +9,7 @@ import {
 import { Suspense, useState } from 'react'
 import Model from './Model'
 import Controller from './Controller'
+import NPCModel from './Npcmodel'  
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
 export default function ModelViewer () {
@@ -71,7 +72,16 @@ export default function ModelViewer () {
               <meshBasicMaterial color='red' />
             </mesh>
           )}
+          <NPCModel
+            url="/models/happy_joe.fbx"
+            position={[-5, 0, -7]}
+            rotation={[0, 2.5, 0]}
+            scale={0.019}
+            idleAnim="mixamo.com"
+            onClick={() => openDialogue('happy_joe')}  // your own handler
+          />
 
+          {/* Mouse for looking around */}
           <PointerLockControls />
           <Controller />
           <CoordsLogger onHit={setLastCoords} />
