@@ -67,8 +67,8 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
 
             {/* TOP LEFT: BRANDING */}
             <motion.div className='absolute top-12 left-12 border-l border-amber-600 pl-5 py-1'>
-              <h1 className='text-2xl tracking-[0.1em] text-white'>
-                The  Mind Museum
+              <h1 className='text-xl tracking-[0.1em] text-white'>
+                The Mind Museum
               </h1>
               <p className='text-amber-600 text-[9px] tracking-[0.2em] uppercase mt-1 font-bold'>
                 An interactive learning experience
