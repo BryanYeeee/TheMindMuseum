@@ -41,6 +41,18 @@ export default function ModelViewer () {
     }
   }, [])
 
+  // Close dialogue on E key
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.code === 'KeyE') {
+        setNpcDialogue(null)
+        setDialogue(null)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
+
   // Start music on first pointer lock (browsers require a user gesture)
   useEffect(() => {
     if (isLocked && audioRef.current?.paused)
@@ -106,7 +118,7 @@ export default function ModelViewer () {
             exhibits={exhibitData.filter(exhibit => exhibit.segmentID === 2)} // These will automatically flip to match the rotation
             triggers={triggerData.filter(tr => tr.segmentID === 2)}
           /> */}
-          <Tileset setDialogue={setDialogue} setNpcDialogue={setNpcDialogue} />
+          <Tileset setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }} setNpcDialogue={setNpcDialogue}/>
 
           {lastCoords !== 'Click a surface to get coords' && (
             <mesh
