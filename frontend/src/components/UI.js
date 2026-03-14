@@ -1,13 +1,101 @@
   'use client'
+  import { useState, useRef, useEffect } from 'react'
   import { motion, AnimatePresence } from 'framer-motion'
 
-  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onResume }) {
+  function ReceptionistChat ({ onClose }) {
+    const [question, setQuestion] = useState('')
+    const [response, setResponse] = useState(null)
+    const [thinking, setThinking] = useState(false)
+    const inputRef = useRef(null)
+
+    useEffect(() => {
+      inputRef.current?.focus()
+    }, [])
+
+    const submit = async () => {
+      const q = question.trim()
+      if (!q || thinking) return
+      setThinking(true)
+      setResponse(null)
+      try {
+        const res = await fetch('http://localhost:8080/agent/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q }),
+        })
+        const data = await res.json()
+        setResponse(data.answer ?? data.error ?? 'No response.')
+      } catch {
+        setResponse('Sorry, I could not reach the server.')
+      } finally {
+        setThinking(false)
+        setQuestion('')
+      }
+    }
+
+    const handleKey = (e) => {
+      if (e.code === 'Enter') submit()
+    }
+
+    return (
+      <motion.div
+        key='receptionist'
+        initial={{ y: 20, opacity: 0, x: '-50%' }}
+        animate={{ y: 0, opacity: 1, x: '-50%' }}
+        exit={{ y: 10, opacity: 0, x: '-50%' }}
+        transition={{ duration: 0.2 }}
+        className='absolute bottom-20 left-1/2 w-full max-w-xl pointer-events-auto'
+      >
+        <div className='mx-6 bg-black/90 backdrop-blur-md border border-white/20'>
+          {/* Header */}
+          <div className='flex items-center gap-2 px-5 py-2 border-b border-white/20'>
+            <div className='w-1.5 h-1.5 bg-amber-500' />
+            <span className='text-amber-400 text-[10px] tracking-[0.2em] uppercase'>Receptionist</span>
+          </div>
+
+          {/* Response area */}
+          <div className='px-5 py-4 min-h-[3.5rem]'>
+            {thinking ? (
+              <p className='text-white/50 text-sm italic'>Thinking...</p>
+            ) : response ? (
+              <p className='text-white text-sm leading-relaxed'>{response}</p>
+            ) : (
+              <p className='text-white/40 text-sm italic'>Ask me anything about the museum.</p>
+            )}
+          </div>
+
+          {/* Input row */}
+          <div className='flex items-center gap-2 px-5 pb-4'>
+            <input
+              ref={inputRef}
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder='Type a question…'
+              className='flex-1 bg-white/10 border border-white/20 text-white text-sm px-3 py-2 outline-none placeholder-white/30 focus:border-amber-500/60 transition-colors'
+            />
+            <button
+              onClick={submit}
+              disabled={!question.trim() || thinking}
+              className='px-4 py-2 text-[10px] tracking-[0.2em] uppercase border border-white/20 text-white/70 hover:border-amber-500/60 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all'
+            >
+              Ask
+            </button>
+          </div>
+
+          <p className='px-5 pb-3 text-white/40 text-[9px] tracking-[0.2em] uppercase text-right'>Tab · Close</p>
+        </div>
+      </motion.div>
+    )
+  }
+
+  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onResume, receptionistOpen, onCloseReceptionist }) {
     return (
       <div className='fixed inset-0 pointer-events-none select-none font-lora text-white z-50'>
         <AnimatePresence mode='sync'>
           {/* sync allows both to animate at once for a smoother transition */}
           {/* --- THE ENTRY CURTAIN (LOCK SCREEN) --- */}
-          {!isLocked && (
+          {!isLocked && !receptionistOpen && (
             <motion.div
               key='lock-screen'
               initial={{ opacity: 0 }}
@@ -110,7 +198,7 @@
                         <span className='text-amber-400 text-[10px] tracking-[0.2em] uppercase'>{npcDialogue.name}</span>
                       </div>
                       <p className='px-5 py-4 text-white text-sm leading-relaxed'>{npcDialogue.text}</p>
-                      <p className='px-5 pb-3 text-white/40 text-[9px] tracking-[0.2em] uppercase text-right'>E · Close</p>
+                      <p className='px-5 pb-3 text-white/40 text-[9px] tracking-[0.2em] uppercase text-right'>Tab · Close</p>
                     </div>
                   </motion.div>
                 )}
@@ -139,6 +227,12 @@
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* RECEPTIONIST CHAT — shown outside the HUD/lock-screen so pointer lock state doesn't matter */}
+        <AnimatePresence>
+          {receptionistOpen && <ReceptionistChat onClose={onCloseReceptionist} />}
+        </AnimatePresence>
+
         {/* BOTTOM RIGHT: LOCATION */}
         <div className='absolute bottom-8 right-10 flex items-center gap-3'>
           <span className='text-[9px] text-white/50 tracking-[0.2em] uppercase'>Location</span>
