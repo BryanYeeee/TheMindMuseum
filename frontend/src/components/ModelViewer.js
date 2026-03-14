@@ -124,6 +124,20 @@ export default function ModelViewer () {
   const [isLocked, setIsLocked] = useState(false)
   const [exhibit, setExhibit] = useState(null)
   const controlsRef = useRef()
+  const audioRef = useRef(null)
+
+  useEffect(() => {
+    const audio = new Audio('/music.mp3')
+    audio.loop = true
+    audio.volume = 0.4
+    audioRef.current = audio
+    return () => { audio.pause(); audio.src = '' }
+  }, [])
+
+  // Start music on first pointer lock (browsers require a user gesture)
+  useEffect(() => {
+    if (isLocked && audioRef.current?.paused) audioRef.current.play().catch(() => {})
+  }, [isLocked])
 
   // Don't exit pointer lock when opening — keeps the lock so E can close and return directly
   const openExhibit = (data) => setExhibit(data)

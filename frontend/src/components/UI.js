@@ -66,10 +66,14 @@ export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onRes
             <div className='absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.8)] pointer-events-none' />
 
             {/* TOP LEFT: BRANDING */}
-            <div className='absolute top-8 left-10'>
-              <p className='text-white/90 text-lg tracking-[0.1em]'>The Mind Museum</p>
-              <p className='text-amber-500/70 text-[9px] tracking-[0.2em] mt-0.5'>An interactive learning experience</p>
-            </div>
+            <motion.div className='absolute top-12 left-12 border-l border-amber-600 pl-5 py-1'>
+              <h1 className='text-2xl tracking-[0.1em] text-white'>
+                The  Mind Museum
+              </h1>
+              <p className='text-amber-600 text-[9px] tracking-[0.2em] uppercase mt-1 font-bold'>
+                An interactive learning experience
+              </p>
+            </motion.div>
 
             {/* CENTER: RETICLE */}
             <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
