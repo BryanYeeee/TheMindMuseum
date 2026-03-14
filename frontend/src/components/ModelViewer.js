@@ -177,7 +177,7 @@ export default function ModelViewer () {
               />
               <NPCHitbox
                 position={npc.position}
-                onDialogue={() => setNpcDialogue({ name: npc.name, text: npc.dialogue })}
+                onDialogue={() => { setNpcDialogue({ name: npc.name, text: npc.dialogue }); setDialogue(null) }}
               />
             </group>
           ))}
@@ -192,7 +192,7 @@ export default function ModelViewer () {
 
           <TriggerManager
             data={triggerData}
-            onTriggerEnter={msg => setDialogue(msg)}
+            onTriggerEnter={msg => { setDialogue(msg); setNpcDialogue(null) }}
             onTriggerExit={() => setDialogue(null)}
           />
 
