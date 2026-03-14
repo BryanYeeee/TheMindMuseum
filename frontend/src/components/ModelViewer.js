@@ -3,19 +3,14 @@
 import { Canvas } from '@react-three/fiber'
 import { PointerLockControls, Environment } from '@react-three/drei'
 import { Suspense, useState, useEffect, useRef } from 'react'
-import Model from './Model'
 import Controller from './Controller'
 import NPCModel from './NpcModel'
 import * as THREE from 'three'
 import CoordsLogger from './CoordsLogger'
-import TriggerManager from './TriggerManager'
 import UI from './UI'
 import TableLoader from './TableLoader'
 import ExhibitViewer from './ExhibitViewer'
-
-import { triggerData } from '@/constants/TriggerData'
 import { npcData } from '@/constants/NpcData'
-import { exhibitData } from '@/constants/ExhibitData'
 import NPCHitbox from './NpcHitbox'
 import Tileset from './TileSet'
 
@@ -86,20 +81,6 @@ export default function ModelViewer () {
             color='#ffffff'
           />
 
-          {/* <Model
-            url='/models/museum_interior/scene.gltf'
-            setDialogue={setDialogue}
-            exhibits={exhibitData.filter(ex => ex.segmentID === 1)}
-            triggers={triggerData.filter(tr => tr.segmentID === 1)}
-          /> */}
-          {/* <Model
-            url='/models/museum_interior/scene.gltf'
-            setDialogue={setDialogue}
-            position={[2.8, 0, 0]}
-            rotation={[0, Math.PI, 0]}
-            exhibits={exhibitData.filter(exhibit => exhibit.segmentID === 2)} // These will automatically flip to match the rotation
-            triggers={triggerData.filter(tr => tr.segmentID === 2)}
-          /> */}
           <Tileset setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }} />
 
           {lastCoords !== 'Click a surface to get coords' && (
@@ -151,13 +132,6 @@ export default function ModelViewer () {
             rotation={[0, 2 * Math.PI, 0]}
             scale={1.5}
           />
-{/* 
-          <TriggerManager
-            data={triggerData}
-            onTriggerEnter={msg => { setDialogue(msg); setNpcDialogue(null) }}
-            onTriggerExit={() => setDialogue(null)}
-          /> */}
-
           <PointerLockControls
             ref={controlsRef}
             enabled={!exhibit}
