@@ -9,8 +9,7 @@ from flask import Flask, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PyPDF2 import PdfReader
 
-from models import ResolvedAsset, ResolvedArtifact, JobResult
-from assets import WORLD_SLOTS, ARTIFACT_SLOTS
+from models import ArtifactResult, JobResult
 from gemini_client import design_world
 from model_generator import generate_model, GENERATED_MODELS_DIR
 
@@ -68,44 +67,25 @@ def _run_job(job_id: str, text: str):
         total = len(world_design.artifacts)
         _emit(job_id, {"status": "generating_models", "progress": f"0/{total}"})
 
-        artifact_model_files: list[str] = []
+        artifact_results: list[ArtifactResult] = []
         for i, artifact in enumerate(world_design.artifacts):
             filename = generate_model(artifact.visual_description)
-            artifact_model_files.append(filename)
-            _emit(job_id, {"status": "generating_models", "progress": f"{i + 1}/{total}"})
-
-        # Step 3: Assemble result — resolve slot IDs to positions
-        _emit(job_id, {"status": "assembling", "message": "Building world layout..."})
-
-        resolved_assets = []
-        for ap in world_design.asset_placements:
-            slot = WORLD_SLOTS[ap.slot_id]
-            resolved_assets.append(ResolvedAsset(
-                asset_id=ap.asset_id,
-                slot_id=ap.slot_id,
-                position=slot["position"],
-                rotation=slot["rotation"],
-                scale=slot["scale"],
-            ))
-
-        resolved_artifacts = []
-        for artifact, model_file in zip(world_design.artifacts, artifact_model_files):
-            slot = ARTIFACT_SLOTS[artifact.slot_id]
-            resolved_artifacts.append(ResolvedArtifact(
+            artifact_results.append(ArtifactResult(
                 name=artifact.name,
                 lore=artifact.lore,
                 fact=artifact.fact,
-                model_url=f"/api/models/{model_file}",
-                slot_id=artifact.slot_id,
-                position=slot["position"],
-                rotation=slot["rotation"],
+                model_url=f"/api/models/{filename}",
+                position_index=artifact.position_index,
             ))
+            _emit(job_id, {"status": "generating_models", "progress": f"{i + 1}/{total}"})
+
+        # Step 3: Assemble result
+        _emit(job_id, {"status": "assembling", "message": "Building world..."})
 
         result = JobResult(
             summary=world_design.summary,
             theme=world_design.theme,
-            world=resolved_assets,
-            artifacts=resolved_artifacts,
+            artifacts=artifact_results,
         )
 
         jobs[job_id]["result"] = result.model_dump()

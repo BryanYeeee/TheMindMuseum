@@ -11,15 +11,7 @@ from google.genai import types as genai_types
 from pydantic import ValidationError
 
 from models import WorldDesign
-from assets import (
-    get_assets_for_prompt,
-    get_world_slots_for_prompt,
-    get_artifact_slots_for_prompt,
-    validate_asset_id,
-    validate_world_slot_id,
-    validate_artifact_slot_id,
-    ARTIFACT_SLOTS,
-)
+from assets import NUM_POSITIONS, validate_position_index
 
 MAX_RETRIES = 3
 
@@ -41,44 +33,32 @@ def _build_prompt(text: str, error_context: str | None = None) -> str:
     prompt = f"""You are a world designer for an educational memory palace application.
 
 The user has provided study material. Your job is to:
-1. Summarize the key facts from the material.
-2. Design a 3D world layout using ONLY the assets and slots listed below.
-3. Create memory artifacts — physical objects whose lore encodes specific facts.
+1. Identify the most important facts from the material.
+2. Create memory artifacts — creative physical objects whose lore encodes these facts.
 
 RULES:
-- Use ONLY asset IDs from the asset list. Do NOT invent new ones.
-- Assign each asset to a world slot. Read each slot's description to choose wisely.
-- Each slot may be used AT MOST once.
-- Create 1–{len(ARTIFACT_SLOTS)} artifacts. Assign each to a unique artifact slot.
-- Each artifact needs a creative name, lore that weaves in the fact, the raw fact, and a visual description for 3D model generation.
-- You do NOT need to fill every slot — pick what fits your theme.
+- Create up to {NUM_POSITIONS} artifacts (one per position). Try to use all {NUM_POSITIONS} if the material has enough content.
+- Each artifact gets a unique position_index from 0 to {NUM_POSITIONS - 1}.
+- position_index 0 and 1 are the MOST prominent positions — assign the two most important facts there.
+- Lower indices = more important facts. Order artifacts by decreasing importance.
+- No two artifacts may share the same position_index.
+- Each artifact needs: a creative name, lore that naturally weaves in the fact, the raw fact, and a detailed visual description for 3D model generation.
+- The visual_description should describe a specific physical object that could be a 3D model (e.g. "A crystalline orb with swirling green energy inside, resting on a stone base").
 
 === STUDY MATERIAL ===
 {text}
 
-=== ASSETS (use these IDs) ===
-{get_assets_for_prompt()}
-
-=== WORLD SLOTS (assign assets here — read descriptions carefully) ===
-{get_world_slots_for_prompt()}
-
-=== ARTIFACT SLOTS (assign artifacts here) ===
-{get_artifact_slots_for_prompt()}
-
 Return a JSON object matching this exact structure:
 {{
-  "summary": "A concise summary of the key facts",
+  "summary": "A concise summary of the key facts from the material",
   "theme": "A short theme name for the world (e.g. 'Ancient Library', 'Enchanted Forest')",
-  "asset_placements": [
-    {{"asset_id": "<asset_id>", "slot_id": "<world_slot_id>"}}
-  ],
   "artifacts": [
     {{
       "name": "Artifact Name",
-      "lore": "Creative lore text that encodes the fact",
+      "lore": "Creative lore text that naturally encodes the fact",
       "fact": "The raw fact from the study material",
-      "visual_description": "Detailed visual description for 3D model generation",
-      "slot_id": "<artifact_slot_id>"
+      "visual_description": "Detailed visual description of a 3D object",
+      "position_index": 0
     }}
   ]
 }}"""
@@ -93,35 +73,21 @@ def _validate_world_design(design: WorldDesign) -> list[str]:
     """Post-validate business rules beyond Pydantic schema checks."""
     errors = []
 
-    # Check asset IDs exist
-    for ap in design.asset_placements:
-        if not validate_asset_id(ap.asset_id):
-            errors.append(f'Unknown asset_id: "{ap.asset_id}"')
-        if not validate_world_slot_id(ap.slot_id):
-            errors.append(f'Unknown world slot_id: "{ap.slot_id}"')
+    # Check position indices are valid and unique
+    indices = [a.position_index for a in design.artifacts]
+    for idx in indices:
+        if not validate_position_index(idx):
+            errors.append(f'Invalid position_index: {idx} (must be 0–{NUM_POSITIONS - 1})')
 
-    # Check artifact slot IDs exist
-    for art in design.artifacts:
-        if not validate_artifact_slot_id(art.slot_id):
-            errors.append(f'Unknown artifact slot_id: "{art.slot_id}"')
-
-    # Check no duplicate world slots
-    world_slot_ids = [ap.slot_id for ap in design.asset_placements]
-    dupes = set(s for s in world_slot_ids if world_slot_ids.count(s) > 1)
+    dupes = set(i for i in indices if indices.count(i) > 1)
     if dupes:
-        errors.append(f'Duplicate world slot assignments: {dupes}')
+        errors.append(f'Duplicate position indices: {dupes}')
 
-    # Check no duplicate artifact slots
-    artifact_slot_ids = [a.slot_id for a in design.artifacts]
-    art_dupes = set(s for s in artifact_slot_ids if artifact_slot_ids.count(s) > 1)
-    if art_dupes:
-        errors.append(f'Duplicate artifact slot assignments: {art_dupes}')
-
-    # Check artifact count within bounds
+    # Check artifact count
     if len(design.artifacts) < 1:
-        errors.append("Must have at least 1 artifact")
-    if len(design.artifacts) > len(ARTIFACT_SLOTS):
-        errors.append(f"Too many artifacts: {len(design.artifacts)} > {len(ARTIFACT_SLOTS)}")
+        errors.append('Must have at least 1 artifact')
+    if len(design.artifacts) > NUM_POSITIONS:
+        errors.append(f'Too many artifacts: {len(design.artifacts)} > {NUM_POSITIONS}')
 
     return errors
 
@@ -138,7 +104,7 @@ def design_world(text: str) -> WorldDesign:
         prompt = _build_prompt(text, error_context)
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
             config=genai_types.GenerateContentConfig(
                 response_mime_type="application/json",
