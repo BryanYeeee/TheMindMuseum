@@ -1,12 +1,11 @@
-// components/Model.js
 import { useGLTF } from '@react-three/drei';
+import { useMemo } from 'react';
 
-export default function Model({ url }) {
-  // useGLTF handles loading and caching automatically
+export default function Model({ url, ...props }) {
   const { scene } = useGLTF(url);
   
-  return <primitive object={scene} scale={1.5} position={[0, 0, 0]} />;
-}
+  // Clone the scene so each instance can have its own position/rotation
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-// Pre-loading helps avoid "popping" during navigation
-useGLTF.preload('/models/museum_interior/scene.gltf');
+  return <primitive object={clonedScene} {...props} />;
+}
