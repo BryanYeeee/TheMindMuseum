@@ -1,21 +1,114 @@
+'use client'
 import { useGLTF, useTexture } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
-import { useEffect, useMemo } from 'react'
+import { useThree, useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
+import * as THREE from 'three'
+import ObjectModel from './ObjectModel'
+import PaintingModel from './PaintingModel'
 
-export default function Model ({ url, ...props }) {
-  // useGLTF handles loading and caching automatically
+const TILE_WIDTH = 20;
+const TILE_DEPTH = 34.4; 
 
+export default function Model ({
+  url,
+  exhibits = [],
+  triggers = [],
+  setDialogue,
+  ...props
+}) {
   const { scene } = useGLTF(url)
-  const { scene: threeScene } = useThree()
+  const { scene: threeScene, camera } = useThree()
   const bg = useTexture('/images/sky.png')
+
   const clonedScene = useMemo(() => scene.clone(), [scene])
+  const groupRef = useRef()
+  const activeTriggerId = useRef(null)
+
   useEffect(() => {
-    threeScene.background = bg
+    if (bg) {
+      bg.encoding = 3001
+      threeScene.background = bg
+    }
   }, [bg, threeScene])
 
+  useFrame(() => {
+    if (!groupRef.current || !triggers.length) return
+
+    let foundTrigger = null
+
+    // Convert global camera position to the Model's local coordinate system
+    const localPlayerPos = new THREE.Vector3().copy(camera.position)
+    groupRef.current.worldToLocal(localPlayerPos)
+
+    triggers.forEach(trigger => {
+      const [tx, ty, tz] = trigger.position
+      const hW = (trigger.width || 2) / 2
+      const hD = (trigger.depth || 2) / 2
+
+      // Collision check happens in LOCAL space
+      if (
+        Math.abs(localPlayerPos.x - tx) < hW &&
+        Math.abs(localPlayerPos.z - tz) < hD
+      ) {
+        foundTrigger = trigger
+      }
+    })
+
+    if (foundTrigger && activeTriggerId.current !== foundTrigger.id) {
+      activeTriggerId.current = foundTrigger.id
+      setDialogue(foundTrigger.message)
+    } else if (!foundTrigger && activeTriggerId.current !== null) {
+      activeTriggerId.current = null
+      setDialogue(null)
+    }
+  })
+
   return (
-    <>
-      <primitive object={clonedScene} {...props} />
-    </>
+    <group ref={groupRef} {...props}>
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color="#ff00ff" /> 
+      </mesh>
+      <group position={[-1.4, 0, -10]}>
+        <primitive object={clonedScene} />
+      </group>
+
+      {/* Relative Exhibits */}
+      {exhibits.map((exhibit, index) => {
+        const commonProps = {
+          url: exhibit.url,
+          position: exhibit.position,
+          rotation: exhibit.rotation || [0, 0, 0],
+          scale: exhibit.scale || 1,
+          onInteract: () => setDialogue(exhibit.dialogue)
+        }
+
+        return exhibit.type === 'painting' ? (
+          <PaintingModel key={`exhibit-${index}`} {...commonProps} />
+        ) : (
+          <ObjectModel key={`exhibit-${index}`} {...commonProps} />
+        )
+      })}
+
+      {triggers.map(trigger => (
+        <mesh key={`debug-${trigger.id}`} position={trigger.position}>
+          <boxGeometry
+            args={[
+              trigger.width || trigger.radius * 2,
+              trigger.height || 4, // Visual height
+              trigger.depth || trigger.radius * 2
+            ]}
+          />
+          <meshBasicMaterial
+            color='#00ffff'
+            transparent={true}
+            opacity={0.5}
+            depthWrite={false}
+            depthTest={true}
+            renderOrder={10}
+          />
+        </mesh>
+      ))}
+    </group>
   )
 }
