@@ -1,26 +1,32 @@
-'use client'
-import LandingPage from '@/components/LandingPage'
-import ModelViewer from '@/components/ModelViewer'
-import { useState } from 'react'
+"use client";
+import LandingPage from "@/components/LandingPage";
+import ModelViewer from "@/components/ModelViewer";
+import { useState } from "react";
 
 export default function MainApp() {
-  const [view, setView] = useState('landing') 
-  const [initialJobData, setInitialJobData] = useState(null)
-  const [numArtifacts, setNumArtifacts] = useState(3)
+    const [view, setView] = useState("landing");
+    const [initialJobData, setInitialJobData] = useState(null);
+    const [numArtifacts, setNumArtifacts] = useState(3);
+    const [pdfKey, setPdfKey] = useState(null);
 
-  const handleStartMuseum = (numArtifacts, data) => {
-    setNumArtifacts(numArtifacts)
-    setInitialJobData(data) // Store the initial job_id and artifact list
-    setView('museum')       // Switch the component being rendered
-  }
+    const handleStartMuseum = (numArtifacts, data, pdf_key) => {
+        setNumArtifacts(numArtifacts);
+        setInitialJobData(data); // Store the initial job_id and artifact list
+        setPdfKey(pdf_key); // Store pdf_key for subsequent calls
+        setView("museum"); // Switch the component being rendered
+    };
 
-  return (
-    <main className="w-full h-screen bg-black">
-      {view === 'landing' ? (
-        <LandingPage onStart={handleStartMuseum} />
-      ) : (
-        <ModelViewer numArtifacts={numArtifacts} initialJobData={initialJobData} />
-      )}
-    </main>
-  )
+    return (
+        <main className="w-full h-screen bg-black">
+            {view === "landing" ? (
+                <LandingPage onStart={handleStartMuseum} />
+            ) : (
+                <ModelViewer
+                    numArtifacts={numArtifacts}
+                    initialJobData={initialJobData}
+                    pdfKey={pdfKey}
+                />
+            )}
+        </main>
+    );
 }

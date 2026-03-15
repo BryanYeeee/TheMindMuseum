@@ -168,15 +168,41 @@ def ingest_local_file(path: str):
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 
+UPLOADS_DIR = os.path.join("static", "uploads")
+
+
 @rag.route("/")
 def index_rag():
     return "rag port"
 
 @rag.route("/ingest", methods=["POST"])
 def ingest():
+    """Ingest a PDF into the vector store.
+
+    Accepts either:
+      - a ``pdf_key`` in the JSON body (looks up the previously-uploaded file), or
+      - a file upload (legacy).
+    """
+    body = request.get_json(silent=True) or {}
+    pdf_key = body.get("pdf_key", "")
+
+    if pdf_key:
+        # Use the already-uploaded PDF on disk
+        stored_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
+        if not os.path.isfile(stored_path):
+            return jsonify({"error": f"No uploaded PDF found for key '{pdf_key}'"}), 404
+
+        try:
+            chunks = pdf_to_chunks(stored_path, f"{pdf_key}.pdf")
+            ids = store.upsert(chunks)
+            return jsonify({"success": True, "source": pdf_key, "chunks": len(ids)})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # Legacy: file upload
     file = request.files.get("file")
     if not file:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": "No file or pdf_key provided"}), 400
 
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         file.save(tmp.name)

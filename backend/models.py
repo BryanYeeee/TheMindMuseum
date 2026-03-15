@@ -23,3 +23,23 @@ class JobResult(BaseModel):
     job_id: str
     artifacts: list[ArtifactResult]
     status: str = "pending"  # pending | in_progress | complete
+
+
+class PaintingResult(BaseModel):
+    """A single museum painting with metadata and generated image."""
+
+    id: str
+    name: str
+    description: str
+    visual_description: str
+    image_url: Optional[str] = None
+    status: str = "pending"  # pending | generating_image | complete | error
+    error: Optional[str] = None
+
+
+class PaintingJobResult(BaseModel):
+    """A painting job containing multiple paintings being generated."""
+
+    job_id: str
+    paintings: list[PaintingResult]
+    status: str = "pending"  # pending | in_progress | complete
