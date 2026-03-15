@@ -6,14 +6,16 @@ import { useState } from 'react'
 export default function MainApp () {
   const [view, setView] = useState('landing')
   const [initialArtifactData, setInitialArtifactData] = useState(null)
+  const [initialPaintingData, setInitialPaintingData] = useState(null)
   const [numArtifacts, setNumArtifacts] = useState(3)
   const [numPaintings, setNumPaintings] = useState(3)
   const [pdfKey, setPdfKey] = useState(null)
 
-  const handleStartMuseum = (numArtifacts, numPaintings, data, pdf_key) => {
+  const handleStartMuseum = (numArtifacts, numPaintings, data, paintingData, pdf_key) => {
     setNumArtifacts(numArtifacts)
     setNumPaintings(numPaintings)
     setInitialArtifactData(data) // Store the initial job_id and artifact list
+    setInitialPaintingData(paintingData) // Store the initial painting data
     setPdfKey(pdf_key) // Store pdf_key for subsequent calls
     setView('museum') // Switch the component being rendered
   }
@@ -27,6 +29,7 @@ export default function MainApp () {
           numArtifacts={numArtifacts}
           numPaintings={numPaintings}
           initialArtifactData={initialArtifactData}
+          initialPaintingData={initialPaintingData}
           pdfKey={pdfKey}
         />
       )}

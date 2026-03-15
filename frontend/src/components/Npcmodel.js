@@ -27,7 +27,7 @@ export default function NPCModel({
 
   // 1. Determine final URL: If Receptionist, use provided URL, else pick random
   const finalUrl = useMemo(() => {
-    if (name === "Receptionist") return url;
+    if (name === "Receptionist") return '/models/reception.fbx';
     const randomIndex = Math.floor(Math.random() * VISITOR_MODELS.length);
     return VISITOR_MODELS[randomIndex];
   }, [name, url]);

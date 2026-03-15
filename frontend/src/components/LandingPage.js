@@ -49,15 +49,25 @@ export default function LandingPage ({ onStart }) {
           pdf_key
         })
       })
+       const response3 = await fetch('http://localhost:5001/agent/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pdf_key
+        })
+      })
 
       const data = await response.json()
-
       const data2 = await response2.json()
+      const data3 = await response3.json()
+
       console.log('Ingest response:', data2)
       if (data.error) throw new Error(data.error)
+      if (data2.error) throw new Error(data2.error)
+      if (data3.error) throw new Error(data.error)
 
       // Transitions to ModelViewer, passing pdf_key for future calls
-      onStart(numArtifacts, numPaintings, data, pdf_key)
+      onStart(numArtifacts, numPaintings, data, data3, pdf_key)
     } catch (err) {
       console.error(err)
       alert('Extraction failed. Ensure the backend is running.')
