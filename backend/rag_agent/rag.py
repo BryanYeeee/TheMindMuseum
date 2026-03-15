@@ -8,6 +8,7 @@ from openai import OpenAI
 from railtracks.vector_stores import ChromaVectorStore, Chunk
 from sentence_transformers import SentenceTransformer
 import shutil
+from utils import generate_quiz
 
 rag = Blueprint("rag", __name__)
 load_dotenv()
@@ -209,7 +210,7 @@ def ingest():
             return jsonify({"error": f"No uploaded PDF found for key '{pdf_key}'"}), 404
 
         try:
-            
+
             chunks = pdf_to_chunks(stored_path, f"{pdf_key}.pdf")
             ids = store.upsert(chunks)
             return jsonify({"success": True, "source": pdf_key, "chunks": len(ids)})
@@ -229,7 +230,10 @@ def ingest():
         reset_store()
         chunks = pdf_to_chunks(tmp_path, file.filename)
         ids = store.upsert(chunks)
-        return jsonify({"success": True, "source": file.filename, "chunks": len(ids)})
+        print("loaded")
+        quiz_data = generate_quiz(store, count=5)
+        print("sending quiz")
+        return jsonify({"success": True, "source": pdf_key, "chunks": len(ids), "quiz": quiz_data})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
