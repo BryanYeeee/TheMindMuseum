@@ -23,6 +23,8 @@ services:
       - /app/node_modules
     environment:
       - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
     depends_on:
       - backend
     restart: unless-stopped

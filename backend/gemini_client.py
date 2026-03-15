@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import io
 import logging
 import os
 import uuid
+
+from PIL import Image as PILImage
 
 from google import genai
 from google.genai import types
@@ -199,13 +202,37 @@ def generate_artifact_image(visual_description: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 PAINTING_IMAGE_PROMPT = (
-    "Generate a flat 2D image artwork viewed straight-on. The artwork MUST fill "
-    "the entire image edge-to-edge with absolutely no border, margin, frame, "
+    "Generate a flat 2D artwork in LANDSCAPE orientation (wider than tall, "
+    "approximately 14:9 aspect ratio). The image MUST fill "
+    "the entire frame edge-to-edge with absolutely no border, margin, "
     "mat, wall, shadow, or any surrounding context visible. Do NOT render "
     "the artwork hanging on a wall or sitting on an easel — produce ONLY "
-    "the artwork itself"
+    "the artwork itself as if scanned from a canvas. "
     "The artwork: {description}"
 )
+
+
+def _crop_to_14_9(image_bytes: bytes) -> bytes:
+    """Centre-crop raw PNG bytes to exactly 14:9 aspect ratio."""
+    img = PILImage.open(io.BytesIO(image_bytes))
+    w, h = img.size
+    target_ratio = 14 / 9
+    current_ratio = w / h
+
+    if current_ratio > target_ratio:
+        # Too wide — trim sides
+        new_w = int(h * target_ratio)
+        left = (w - new_w) // 2
+        img = img.crop((left, 0, left + new_w, h))
+    elif current_ratio < target_ratio:
+        # Too tall — trim top/bottom
+        new_h = int(w / target_ratio)
+        top = (h - new_h) // 2
+        img = img.crop((0, top, w, top + new_h))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 def generate_painting_image(visual_description: str) -> bytes:
@@ -220,9 +247,11 @@ def generate_painting_image(visual_description: str) -> bytes:
             config=types.GenerateImagesConfig(
                 number_of_images=1,
                 output_mime_type="image/png",
+                aspect_ratio="16:9",
             ),
         )
         image_bytes: bytes = result.generated_images[0].image.image_bytes
+        image_bytes = _crop_to_14_9(image_bytes)
         logger.info("Painting image generated via Imagen 4 (%d bytes)", len(image_bytes))
         return image_bytes
 
@@ -239,11 +268,12 @@ def generate_painting_image(visual_description: str) -> bytes:
 
     for part in response.candidates[0].content.parts:
         if part.inline_data and part.inline_data.data:
+            cropped = _crop_to_14_9(part.inline_data.data)
             logger.info(
                 "Painting image generated via Gemini Flash (%d bytes, %s)",
-                len(part.inline_data.data),
+                len(cropped),
                 part.inline_data.mime_type,
             )
-            return part.inline_data.data
+            return cropped
 
     raise RuntimeError("Neither Imagen 4 nor Gemini Flash produced a painting image")

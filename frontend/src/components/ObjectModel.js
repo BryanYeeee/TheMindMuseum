@@ -1,11 +1,11 @@
 "use client";
 import { useGLTF } from "@react-three/drei";
-import { useState, useMemo } from "react";
+import { memo, useState, useMemo } from "react";
 import * as THREE from "three";
 
 const BASE_URL = "http://localhost:5001";
 
-export default function ObjectModel({
+export default memo(function ObjectModel({
     model_url,
     position,
     rotation,
@@ -79,4 +79,4 @@ export default function ObjectModel({
             )}
         </group>
     );
-}
+});

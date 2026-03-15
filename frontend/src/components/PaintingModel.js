@@ -1,11 +1,11 @@
 "use client";
 import { useTexture } from "@react-three/drei";
-import { useState } from "react";
+import { memo, useState } from "react";
 import * as THREE from "three";
 
 const BASE_URL = "http://localhost:5001";
 
-export default function PaintingModel({
+export default memo(function PaintingModel({
     image_url,
     position,
     rotation,
@@ -77,4 +77,4 @@ export default function PaintingModel({
             </group>
         </group>
     );
-}
+});

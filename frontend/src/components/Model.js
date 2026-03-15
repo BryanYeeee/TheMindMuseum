@@ -1,7 +1,7 @@
 "use client";
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useThree, useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import ObjectModel from "./ObjectModel";
 import PaintingModel from "./PaintingModel";
@@ -94,30 +94,35 @@ export default function Model({
                 <primitive object={clonedScene} />
             </group>
 
-            {/* Relative Exhibits */}
+            {/* Relative Exhibits – each gets its own Suspense so loading
+                a new texture/model doesn't blank the whole scene */}
             {exhibits.map((exhibit, index) => {
                 const onInteract = () => openExhibit(exhibit);
 
-                return exhibit.type === "painting" ? (
-                    <PaintingModel
-                        key={`exhibit-${index}`}
-                        image_url={exhibit.image_url}
-                        position={exhibit.position}
-                        posKey={exhibit.posKey}
-                        rotation={exhibit.rotation || [0, 0, 0]}
-                        scale={exhibit.scale || 1}
-                        onInteract={onInteract}
-                    />
-                ) : (
-                    <ObjectModel
-                        key={`exhibit-${index}`}
-                        model_url={exhibit.model_url}
-                        position={exhibit.position}
-                        posKey={exhibit.posKey}
-                        rotation={exhibit.rotation || [0, 0, 0]}
-                        scale={exhibit.scale || 1}
-                        onInteract={onInteract}
-                    />
+                return (
+                    <Suspense
+                        key={exhibit.id || `exhibit-${index}`}
+                        fallback={null}>
+                        {exhibit.type === "painting" ? (
+                            <PaintingModel
+                                image_url={exhibit.image_url}
+                                position={exhibit.position}
+                                posKey={exhibit.posKey}
+                                rotation={exhibit.rotation || [0, 0, 0]}
+                                scale={exhibit.scale || 1}
+                                onInteract={onInteract}
+                            />
+                        ) : (
+                            <ObjectModel
+                                model_url={exhibit.model_url}
+                                position={exhibit.position}
+                                posKey={exhibit.posKey}
+                                rotation={exhibit.rotation || [0, 0, 0]}
+                                scale={exhibit.scale || 1}
+                                onInteract={onInteract}
+                            />
+                        )}
+                    </Suspense>
                 );
             })}
 
