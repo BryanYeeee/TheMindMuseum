@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify, request
 from openai import OpenAI
 from railtracks.vector_stores import ChromaVectorStore, Chunk
 from sentence_transformers import SentenceTransformer
+import shutil
 
 rag = Blueprint("rag", __name__)
 load_dotenv()
@@ -36,6 +37,19 @@ _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 def embedding_function(texts: list[str]) -> list[list[float]]:
     return _embed_model.encode(texts).tolist()
 
+
+def reset_store():
+    global store
+    chroma_path = "./chroma_db"
+    if os.path.exists(chroma_path):
+        shutil.rmtree(chroma_path)
+        print("🗑️ Deleted existing chroma_db")
+    store = ChromaVectorStore(
+        collection_name="museum-docs",
+        embedding_function=embedding_function,
+        path=chroma_path,
+    )
+    print("✅ Fresh store created")
 
 # ── Vector store ──────────────────────────────────────────────────────────────
 
@@ -213,6 +227,7 @@ def ingest():
         tmp_path = tmp.name
 
     try:
+        reset_store()
         chunks = pdf_to_chunks(tmp_path, file.filename)
         ids = store.upsert(chunks)
         return jsonify({"success": True, "source": file.filename, "chunks": len(ids)})
