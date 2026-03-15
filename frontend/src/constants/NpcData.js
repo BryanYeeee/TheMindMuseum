@@ -7,6 +7,7 @@ export const npcData = [
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Joe',
+    quizTopic: 'a key concept or main idea from the study material',
     dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
   },
   {
@@ -17,6 +18,7 @@ export const npcData = [
     scale: 0.0195,
     idleAnim: 'mixamo.com',
     name: 'Lebron',
+    quizTopic: 'an important definition or term from the study material',
     dialogue: "I'm not just here for the art. I'm here for the culture. Also, have you seen the gift shop?",
   },
   {
@@ -27,6 +29,7 @@ export const npcData = [
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Visitor',
+    quizTopic: 'a specific fact, event, or example from the study material',
     dialogue: "Incredible, isn't it? I've been coming here every weekend for the past three years. Still haven't figured out what that sculpture is supposed to mean.",
   },
   {
@@ -37,6 +40,7 @@ export const npcData = [
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Gallery Guest',
+    quizTopic: 'a cause-and-effect relationship or process described in the study material',
     dialogue: "Oh! Sorry, I didn't see you there. I was just admiring the lighting in this room. Very dramatic, don't you think?",
   },
   {
@@ -47,6 +51,7 @@ export const npcData = [
     scale: 0.0085,
     idleAnim: 'mixamo.com',
     name: 'Curator',
+    quizTopic: 'a technical detail, classification, or methodology from the study material',
     dialogue: "Yes, yes, excellent eye. This piece dates back to... well, I don't actually know. The placard fell off last Tuesday.",
   },
   {
@@ -57,6 +62,7 @@ export const npcData = [
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Art Critic',
+    quizTopic: 'a comparison, contrast, or relationship between two ideas in the study material',
     dialogue: "You see, the juxtaposition of form and negative space here creates a dialogue between the observer and the observed. Or maybe it's just a vase. Hard to say.",
   },
   {
@@ -67,6 +73,7 @@ export const npcData = [
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Jody',
+    quizTopic: 'an obscure or surprising detail from the study material that most people overlook',
     dialogue: "Psst — between you and me, the best exhibit is in the back room. They keep it hidden because it's too powerful.",
   },
   {

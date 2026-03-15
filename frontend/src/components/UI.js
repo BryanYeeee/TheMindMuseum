@@ -89,13 +89,114 @@
     )
   }
 
-  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onResume, receptionistOpen, onCloseReceptionist }) {
+  function NpcQuizPanel ({ npcQuiz, onComplete, onClose }) {
+    const [answer, setAnswer] = useState('')
+    const [feedback, setFeedback] = useState(null)
+    const [thinking, setThinking] = useState(false)
+    const [completed, setCompleted] = useState(false)
+    const inputRef = useRef(null)
+
+    useEffect(() => { inputRef.current?.focus() }, [])
+
+    const submit = async () => {
+      const a = answer.trim()
+      if (!a || thinking || completed) return
+      setThinking(true)
+      setFeedback(null)
+      try {
+        const res = await fetch('http://localhost:5001/quiz/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_answers: [a], sample_answers: [npcQuiz.answer] }),
+        })
+        const data = await res.json()
+        const fb = data[0]?.feedback ?? 'No response.'
+        setFeedback(fb)
+        if (fb.startsWith('That is absolutely correct!')) {
+          setCompleted(true)
+          onComplete(npcQuiz.npcName)
+        }
+      } catch {
+        setFeedback('Could not reach the server.')
+      } finally {
+        setThinking(false)
+        setAnswer('')
+      }
+    }
+
+    const feedbackColor = feedback
+      ? feedback.startsWith('That is absolutely correct!')
+        ? 'text-emerald-400'
+        : feedback.startsWith('You made a small mistake')
+        ? 'text-amber-400'
+        : 'text-red-400'
+      : ''
+
+    return (
+      <motion.div
+        key='npc-quiz'
+        initial={{ y: 20, opacity: 0, x: '-50%' }}
+        animate={{ y: 0, opacity: 1, x: '-50%' }}
+        exit={{ y: 10, opacity: 0, x: '-50%' }}
+        transition={{ duration: 0.2 }}
+        className='absolute bottom-20 left-1/2 w-full max-w-xl pointer-events-auto'
+      >
+        <div className='mx-6 bg-black/90 backdrop-blur-md border border-white/20'>
+          {/* Header */}
+          <div className='flex items-center gap-2 px-5 py-2 border-b border-white/20'>
+            <div className='w-1.5 h-1.5 bg-amber-500' />
+            <span className='text-amber-400 text-[10px] tracking-[0.2em] uppercase'>{npcQuiz.npcName}</span>
+            <span className='ml-auto text-white/20 text-[9px] tracking-[0.2em] uppercase'>Quiz</span>
+          </div>
+
+          {/* Question */}
+          <p className='px-5 pt-4 pb-2 text-white text-sm leading-relaxed'>{npcQuiz.question}</p>
+
+          {/* Feedback */}
+          <div className='px-5 pb-2 min-h-[1.75rem]'>
+            {thinking ? (
+              <p className='text-white/50 text-sm italic'>Thinking...</p>
+            ) : feedback ? (
+              <p className={`text-sm leading-relaxed ${feedbackColor}`}>{feedback}</p>
+            ) : null}
+          </div>
+
+          {/* Input or completion */}
+          {completed ? (
+            <p className='px-5 pb-4 text-emerald-400/70 text-[10px] tracking-[0.2em] uppercase'>Question complete</p>
+          ) : (
+            <div className='flex items-center gap-2 px-5 pb-4'>
+              <input
+                ref={inputRef}
+                value={answer}
+                onChange={e => setAnswer(e.target.value)}
+                onKeyDown={e => { if (e.code === 'Enter') submit() }}
+                placeholder='Type your answer…'
+                className='flex-1 bg-white/10 border border-white/20 text-white text-sm px-3 py-2 outline-none placeholder-white/30 focus:border-amber-500/60 transition-colors'
+              />
+              <button
+                onClick={submit}
+                disabled={!answer.trim() || thinking}
+                className='px-4 py-2 text-[10px] tracking-[0.2em] uppercase border border-white/20 text-white/70 hover:border-amber-500/60 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all'
+              >
+                Answer
+              </button>
+            </div>
+          )}
+
+          <p className='px-5 pb-3 text-white/40 text-[9px] tracking-[0.2em] uppercase text-right'>Tab · Close</p>
+        </div>
+      </motion.div>
+    )
+  }
+
+  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onResume, receptionistOpen, onCloseReceptionist, npcQuiz, onNpcQuizComplete, onCloseNpcQuiz }) {
     return (
       <div className='fixed inset-0 pointer-events-none select-none font-lora text-white z-50'>
         <AnimatePresence mode='sync'>
           {/* sync allows both to animate at once for a smoother transition */}
           {/* --- THE ENTRY CURTAIN (LOCK SCREEN) --- */}
-          {!isLocked && !receptionistOpen && (
+          {!isLocked && !receptionistOpen && !npcQuiz && (
             <motion.div
               key='lock-screen'
               initial={{ opacity: 0 }}
@@ -231,6 +332,11 @@
         {/* RECEPTIONIST CHAT — shown outside the HUD/lock-screen so pointer lock state doesn't matter */}
         <AnimatePresence>
           {receptionistOpen && <ReceptionistChat onClose={onCloseReceptionist} />}
+        </AnimatePresence>
+
+        {/* NPC QUIZ PANEL */}
+        <AnimatePresence>
+          {npcQuiz && <NpcQuizPanel npcQuiz={npcQuiz} onComplete={onNpcQuizComplete} onClose={onCloseNpcQuiz} />}
         </AnimatePresence>
 
         {/* BOTTOM RIGHT: LOCATION */}

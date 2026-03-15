@@ -77,8 +77,28 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
   const [isLocked, setIsLocked] = useState(false)
   const [exhibit, setExhibit] = useState(null)
   const [receptionistOpen, setReceptionistOpen] = useState(false)
+  const [quizData, setQuizData] = useState({}) // { [npcName]: { question, answer } }
+  const [completedNpcs, setCompletedNpcs] = useState(new Set())
+  const [npcQuiz, setNpcQuiz] = useState(null) // { npcName, question, answer }
   const controlsRef = useRef()
   const audioRef = useRef(null)
+
+  // Fetch quiz questions for all non-receptionist NPCs on mount
+  useEffect(() => {
+    const quizNpcs = npcData.filter(n => n.quizTopic)
+    fetch('http://localhost:5001/quiz/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(quizNpcs.map(n => ({ id: n.name, description: n.quizTopic }))),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const map = {}
+        data.forEach(item => { map[item.id] = { question: item.question, answer: item.answer } })
+        setQuizData(map)
+      })
+      .catch(err => console.error('Failed to load quiz data:', err))
+  }, [])
 
   useEffect(() => {
     const audio = new Audio('/music.mp3')
@@ -91,7 +111,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
     }
   }, [])
 
-  // Close dialogue on E key
+  // Close dialogue on Tab key
   useEffect(() => {
     const handleKey = e => {
       if (e.code === 'Tab') {
@@ -102,11 +122,15 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
           setReceptionistOpen(false)
           controlsRef.current?.lock()
         }
+        if (npcQuiz) {
+          setNpcQuiz(null)
+          controlsRef.current?.lock()
+        }
       }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [receptionistOpen])
+  }, [receptionistOpen, npcQuiz])
 
   // Start music on first pointer lock (browsers require a user gesture)
   useEffect(() => {
@@ -119,8 +143,8 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
-    if (!isLocked && !receptionistOpen) setNpcDialogue(null)
-  }, [isLocked, receptionistOpen])
+    if (!isLocked && !receptionistOpen && !npcQuiz) setNpcDialogue(null)
+  }, [isLocked, receptionistOpen, npcQuiz])
 
   const handleNpcClick = npc => {
     if (npc.name === 'Receptionist') {
@@ -128,8 +152,16 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
       setDialogue(null)
       setReceptionistOpen(true)
       controlsRef.current?.unlock()
+    } else if (quizData[npc.name] && !completedNpcs.has(npc.name)) {
+      setNpcDialogue(null)
+      setDialogue(null)
+      setNpcQuiz({ npcName: npc.name, ...quizData[npc.name] })
+      controlsRef.current?.unlock()
     } else {
-      setNpcDialogue({ name: npc.name, text: npc.dialogue })
+      const text = completedNpcs.has(npc.name)
+        ? "You've already answered my question. Well done!"
+        : npc.dialogue
+      setNpcDialogue({ name: npc.name, text })
       setDialogue(null)
     }
   }
@@ -189,12 +221,12 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
           />
           <PointerLockControls
             ref={controlsRef}
-            enabled={!exhibit && !receptionistOpen}
+            enabled={!exhibit && !receptionistOpen && !npcQuiz}
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
           <Controller
-            isLocked={isLocked && !exhibit && !receptionistOpen}
+            isLocked={isLocked && !exhibit && !receptionistOpen && !npcQuiz}
             npcPositions={npcData.map(n => n.position)}
           />
           <CoordsLogger onHit={setLastCoords} />
@@ -207,10 +239,10 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
         isLocked={isLocked}
         onResume={() => controlsRef.current?.lock()}
         receptionistOpen={receptionistOpen}
-        onCloseReceptionist={() => {
-          setReceptionistOpen(false)
-          controlsRef.current?.lock()
-        }}
+        onCloseReceptionist={() => { setReceptionistOpen(false); controlsRef.current?.lock() }}
+        npcQuiz={npcQuiz}
+        onNpcQuizComplete={npcName => setCompletedNpcs(prev => new Set([...prev, npcName]))}
+        onCloseNpcQuiz={() => { setNpcQuiz(null); controlsRef.current?.lock() }}
       />
       <ExhibitViewer
         exhibit={exhibit}

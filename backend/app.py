@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 from rag_agent.rag import rag
+from quiz.quiz import quiz
 from flask import Flask, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PyPDF2 import PdfReader
@@ -15,6 +16,7 @@ from model_generator import generate_model, GENERATED_MODELS_DIR
 
 app = Flask(__name__, static_folder="static")
 app.register_blueprint(rag, url_prefix="/agent")
+app.register_blueprint(quiz, url_prefix="/quiz")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
 CORS(app)
 
