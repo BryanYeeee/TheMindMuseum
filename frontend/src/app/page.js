@@ -1,7 +1,7 @@
-'use client'
-import LandingPage from '@/components/LandingPage'
-import ModelViewer from '@/components/ModelViewer'
-import { useState } from 'react'
+"use client";
+import LandingPage from "@/components/LandingPage";
+import ModelViewer from "@/components/ModelViewer";
+import { useState } from "react";
 
 export default function MainApp () {
   const [view, setView] = useState('landing')
