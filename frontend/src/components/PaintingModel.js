@@ -40,7 +40,7 @@ export default function PaintingModel({
 
                 {/* FRONT Image (facing Z+) */}
                 <mesh scale={scale} position={[0, 0, 0.016]}>
-                    <planeGeometry args={[width * 0.9, height * 0.9]} />
+                    <planeGeometry args={[width, height]} />
                     <meshStandardMaterial map={texture} transparent />
                 </mesh>
 
@@ -49,7 +49,7 @@ export default function PaintingModel({
                     scale={scale}
                     position={[0, 0, -0.016]}
                     rotation={[0, Math.PI, 0]}>
-                    <planeGeometry args={[width * 0.9, height * 0.9]} />
+                    <planeGeometry args={[width, height]} />
                     <meshStandardMaterial map={texture} transparent />
                 </mesh>
 
