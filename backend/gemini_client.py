@@ -199,10 +199,12 @@ def generate_artifact_image(visual_description: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 PAINTING_IMAGE_PROMPT = (
-    "Generate ONLY the artwork itself – do NOT include any frame, border, "
-    "wall, gallery background, or museum setting. The image should be the "
-    "raw painted scene filling the entire canvas edge to edge with no "
-    "surrounding elements. The painting: {description}"
+    "Generate a flat 2D image artwork viewed straight-on. The artwork MUST fill "
+    "the entire image edge-to-edge with absolutely no border, margin, frame, "
+    "mat, wall, shadow, or any surrounding context visible. Do NOT render "
+    "the artwork hanging on a wall or sitting on an easel — produce ONLY "
+    "the artwork itself"
+    "The artwork: {description}"
 )
 
 
