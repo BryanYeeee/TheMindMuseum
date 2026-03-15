@@ -113,8 +113,8 @@ export default function Model ({
         )
       })}
 
-      {npcData.map(npc => (
-        <group key={npc.url + npc.position.join(',')}>
+      {npcData.map((npc, index) => (
+        <group key={npc.url + npc.position.join(',')+`exhibit-${index}`}>
           <NPCModel
             url={npc.url}
             position={npc.position}
@@ -132,25 +132,25 @@ export default function Model ({
         </group>
       ))}
 
-      {triggers.map(trigger => (
-        <mesh key={`debug-${trigger.id}`} position={trigger.position}>
-          <boxGeometry
-            args={[
-              trigger.width || trigger.radius * 2,
-              trigger.height || 4, // Visual height
-              trigger.depth || trigger.radius * 2
-            ]}
-          />
-          <meshBasicMaterial
-            color='#00ffff'
-            transparent={true}
-            opacity={0.5}
-            depthWrite={false}
-            depthTest={true}
-            renderOrder={10}
-          />
-        </mesh>
-      ))}
+        {/* {triggers.map(trigger => (
+          <mesh key={`debug-${trigger.id}`} position={trigger.position}>
+            <boxGeometry
+              args={[
+                trigger.width || trigger.radius * 2,
+                trigger.height || 4, // Visual height
+                trigger.depth || trigger.radius * 2
+              ]}
+            />
+            <meshBasicMaterial
+              color='#00ffff'
+              transparent={true}
+              opacity={0.5}
+              depthWrite={false}
+              depthTest={true}
+              renderOrder={10}
+            />
+          </mesh>
+        ))} */}
     </group>
   )
 }

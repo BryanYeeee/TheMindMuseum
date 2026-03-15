@@ -206,6 +206,7 @@ export default function UI({
                         <div className="absolute bottom-8 left-10 flex flex-col gap-2">
                             {[
                                 ["Movement", "W · A · S · D"],
+                                ["Sprint", "SHIFT"],
                                 ["Look", "MOUSE"],
                                 ["Interact", "CLICK"],
                             ].map(([label, key]) => (
