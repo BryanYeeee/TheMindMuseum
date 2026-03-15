@@ -14,6 +14,24 @@ import NPCHitbox from "./NpcHitbox";
 import Tileset from "./TileSet";
 import MuseumLoader from "./MuseumLoader";
 
+// 🔴 DEBUG ONLY — DELETE AFTER TESTING
+const _debugLines = [];
+function _dlog(msg) {
+    const line = `[${new Date().toISOString()}] ${msg}`;
+    _debugLines.push(line);
+    console.log("[ARTIFACT-DEBUG]", msg);
+}
+function _dflush() {
+    if (_debugLines.length === 0) return;
+    const lines = _debugLines.splice(0);
+    fetch("http://localhost:5001/debug/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines }),
+    }).catch((e) => console.warn("debug flush failed", e));
+}
+// 🔴 END DEBUG
+
 const EXHIBIT_POS = {
     1: [-21.5, 2.15, -17.2],
     2: [-14.82, 2.9, -19.06],
@@ -34,9 +52,17 @@ export default function ModelViewer({
     const [liveExhibits, setLiveExhibits] = useState([]);
     const [livePaintings, setLivePaintings] = useState([]);
 
+    // 🔴 DEBUG ONLY — DELETE AFTER TESTING
+    useEffect(() => {
+        _dlog(
+            `ModelViewer MOUNTED numArtifacts=${numArtifacts} numPaintings=${numPaintings} pdfKey=${pdfKey} job_id=${initialArtifactData?.job_id ?? "null"} artifactCount=${initialArtifactData?.artifacts?.length ?? 0}`,
+        );
+        _dflush();
+    }, []);
+
     const midSectionCount = Math.ceil(numArtifacts / 6);
     const dynamicMap = [
-        // [0, 4], // Entrance/Top
+        [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
         [0, 3], // Exit/Bottom
     ];
@@ -44,12 +70,36 @@ export default function ModelViewer({
     useEffect(() => {
         if (!initialArtifactData) return;
 
+        // Seed liveExhibits with the initial artifact list so SSE updates can match by id
+        const seeded = initialArtifactData.artifacts.map((a, i) => {
+            const { segmentID, position, posKey } = getPlacement(i);
+            return {
+                ...a,
+                segmentID,
+                position,
+                posKey,
+                isLive: false,
+                type: "artifact",
+            };
+        });
+        _dlog(
+            `SEEDING liveExhibits with ${seeded.length} artifacts: ${JSON.stringify(seeded.map((s) => s.id))}`,
+        ); // 🔴 DEBUG
+        setLiveExhibits(seeded);
+
+        _dlog(
+            `SSE CONNECTING url=http://localhost:5001/artifacts/stream/${initialArtifactData.job_id}`,
+        ); // 🔴 DEBUG
+        _dflush(); // 🔴 DEBUG
         const eventSource = new EventSource(
             `http://localhost:5001/artifacts/stream/${initialArtifactData.job_id}`,
         );
         eventSource.addEventListener("artifact_update", (event) => {
             const updatedArtifact = JSON.parse(event.data);
             setLiveExhibits((prev) => {
+                _dlog(
+                    `SSE artifact_update id=${updatedArtifact.id} name="${updatedArtifact.name}" status=${updatedArtifact.status} image=${updatedArtifact.image_url ?? "none"} model=${updatedArtifact.model_url ?? "none"} prevCount=${prev.length} matchIdx=${prev.findIndex((ex) => ex.id === updatedArtifact.id)}`,
+                ); // 🔴 DEBUG
                 const artifactIndex = prev.findIndex(
                     (ex) => ex.id === updatedArtifact.id,
                 );
@@ -57,11 +107,10 @@ export default function ModelViewer({
                 if (artifactIndex === -1) return prev;
                 const { segmentID, position, posKey } =
                     getPlacement(artifactIndex);
-                console.log(
-                    `Updating artifact ${updatedArtifact.id} at ${segmentID} with position ${position}`,
-                );
-                console.log("Updated artifact data:", updatedArtifact);
-                console.log("model url:", updatedArtifact.model_url);
+                _dlog(
+                    `Placement idx=${artifactIndex} segment=${segmentID} posKey=${posKey} pos=[${position}]`,
+                ); // 🔴 DEBUG
+                _dflush(); // 🔴 DEBUG
                 return prev.map((ex, i) =>
                     i === artifactIndex
                         ? {
@@ -78,7 +127,25 @@ export default function ModelViewer({
             });
         });
 
-        return () => eventSource.close();
+        // 🔴 DEBUG ONLY — DELETE AFTER TESTING
+        eventSource.addEventListener("job_complete", (event) => {
+            _dlog(`SSE job_complete: ${event.data}`);
+            _dflush();
+            eventSource.close();
+            _dlog("SSE CLOSED reason=job_complete");
+        });
+        eventSource.onerror = (event) => {
+            _dlog(`SSE ERROR readyState=${event?.target?.readyState}`);
+            _dflush();
+            eventSource.close();
+            _dlog("SSE CLOSED reason=onerror");
+        };
+
+        return () => {
+            eventSource.close();
+            _dlog("SSE CLOSED reason=unmount");
+            _dflush();
+        }; // 🔴 DEBUG
     }, [initialArtifactData?.job_id]);
 
     const [lastCoords, setLastCoords] = useState(

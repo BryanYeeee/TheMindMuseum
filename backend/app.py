@@ -20,6 +20,10 @@ os.makedirs(GENERATED_PAINTINGS_DIR, exist_ok=True)
 UPLOADS_DIR = os.path.join("static", "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
+# 🔴 DEBUG ONLY — DELETE AFTER TESTING
+DEBUG_LOG_FILE = os.path.join("static", "debug_artifacts.log")
+_debug_log_lock = threading.Lock()
+
 app = Flask(__name__, static_folder="static")
 app.register_blueprint(rag, url_prefix="/agent")
 app.register_blueprint(quiz, url_prefix="/quiz")
@@ -310,5 +314,50 @@ def too_large(e):
     return jsonify({"error": "File too large. Maximum upload size is 16 MB."}), 413
 
 
+# ============================================================
+# 🔴 DEBUG ONLY — DELETE THIS BLOCK AFTER TESTING 🔴
+# ============================================================
+@app.route("/debug/log", methods=["POST"])
+def debug_log():
+    """Append frontend debug log entries to a file."""
+    body = request.get_json(silent=True) or {}
+    lines = body.get("lines", [])
+    if not lines:
+        return jsonify({"status": "no lines"}), 200
+    with _debug_log_lock:
+        with open(DEBUG_LOG_FILE, "a", encoding="utf-8") as f:
+            for line in lines:
+                f.write(line + "\n")
+    return jsonify({"status": "ok", "written": len(lines)}), 200
+
+
+@app.route("/debug/log", methods=["GET"])
+def debug_log_read():
+    """Read the debug log file."""
+    if not os.path.exists(DEBUG_LOG_FILE):
+        return jsonify({"log": "(empty — no log file yet)"}), 200
+    with open(DEBUG_LOG_FILE, "r", encoding="utf-8") as f:
+        return jsonify({"log": f.read()}), 200
+
+
+@app.route("/debug/log", methods=["DELETE"])
+def debug_log_clear():
+    """Clear the debug log file."""
+    if os.path.exists(DEBUG_LOG_FILE):
+        os.remove(DEBUG_LOG_FILE)
+    return jsonify({"status": "cleared"}), 200
+# ============================================================
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # Use 'stat' reloader (polling) for reliable hot-reload in Docker on Windows.
+    # The default 'auto' reloader tries inotify which doesn't work across
+    # Docker bind-mount volumes from a Windows host.
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=5000,
+        use_reloader=True,
+        reloader_type="stat",
+        reloader_interval=1,
+    )

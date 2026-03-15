@@ -10,5 +10,6 @@ backend/static/uploads/
 !backend/static/uploads/.gitkeep
 backend/static/paintings/
 !backend/static/paintings/.gitkeep
+backend/static/debug_artifacts.log
 *.idea
 backend/chroma_db
