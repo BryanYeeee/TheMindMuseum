@@ -21,6 +21,7 @@ import NPCHitbox from "./NpcHitbox";
 import Tileset from "./TileSet";
 import MuseumLoader from "./MuseumLoader";
 import { Rubik_80s_Fade } from "next/font/google";
+import CompassBridge from "./CompassBridge";
 
 // 🔴 DEBUG ONLY — DELETE AFTER TESTING
 const _debugLines = [];
@@ -241,6 +242,7 @@ export default function ModelViewer({
     const [isLocked, setIsLocked] = useState(false);
     const [exhibit, setExhibit] = useState(null);
     const [receptionistOpen, setReceptionistOpen] = useState(false);
+    const [heading, setHeading] = useState(0);
     const controlsRef = useRef();
     const audioRef = useRef(null);
 
@@ -404,6 +406,7 @@ export default function ModelViewer({
                         npcPositions={npcData.map((n) => n.position)}
                     />
                     <CoordsLogger onHit={setLastCoords} />
+                    <CompassBridge setHeading={setHeading} />
                 </Suspense>
             </Canvas>
             <UI
@@ -411,6 +414,7 @@ export default function ModelViewer({
                 dialogue={dialogue}
                 npcDialogue={npcDialogue}
                 isLocked={isLocked}
+                heading={heading}
                 onResume={() => controlsRef.current?.lock()}
                 receptionistOpen={receptionistOpen}
                 onCloseReceptionist={() => {
