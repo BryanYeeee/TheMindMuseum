@@ -24,8 +24,17 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 DESIGN_PROMPT = """\
 You are a museum curator designing an exhibit. Based on the following text content,
-create exactly {num_artifacts} museum artifacts. Each artifact should be a physical
-object that could be displayed in a museum and relates to the content.
+create exactly {num_artifacts} museum artifacts. Each artifact must be a three-
+dimensional physical object that looks impressive when displayed on a museum podium.
+
+IMPORTANT constraints – every artifact MUST:
+- Be a solid, 3-dimensional object with clear volume and depth (NO flat items such
+  as scrolls, maps, coins, medallions, pages, tablets, plaques, cards, or paintings).
+- Be an appropriate size for a podium display – roughly 15 cm to 80 cm in its
+  largest dimension. Nothing tiny (e.g. a ring or pin) and nothing enormous (e.g. a
+  full suit of armour or a vehicle).
+- Have visual interest from multiple angles (sculptures, statuettes, ornate vessels,
+  mechanised devices, globes, helmets, decorated boxes, figurines, etc.).
 
 For each artifact provide the following fields:
 1. "name"  – A concise, evocative name for the artifact.
@@ -33,7 +42,8 @@ For each artifact provide the following fields:
    cultural significance.
 3. "visual_description" – A richly detailed visual description of the artifact
    suitable for generating a reference image. Include details about shape, colour,
-   material, texture, approximate size, and any decorative elements. Describe a
+   material, texture, approximate size, and any decorative elements. Emphasise the
+   three-dimensional form and how it would look sitting on a podium. Describe a
    single standalone physical object against a neutral background.
 
 Return ONLY a JSON array of objects with these three fields. No markdown fences.
@@ -85,10 +95,13 @@ For each painting provide the following fields:
 1. "name"  – A concise, evocative title for the painting.
 2. "description" – A 2-3 sentence description of the painting and its artistic or
    cultural significance.
-3. "visual_description" – A richly detailed visual description of the painting
-   suitable for generating the artwork. Include details about style (e.g. oil on
-   canvas, watercolour, impressionist, etc.), colour palette, composition, subject
-   matter, lighting, mood, and any notable artistic techniques.
+3. "visual_description" – A richly detailed visual description of the painting's
+   content suitable for generating the artwork. Include details about style (e.g.
+   oil on canvas, watercolour, impressionist, etc.), colour palette, composition,
+   subject matter, lighting, mood, and any notable artistic techniques.
+   IMPORTANT: Describe ONLY the artwork itself – the scene, subjects, and artistic
+   style. Do NOT mention a frame, wall, gallery, museum setting, or any
+   surrounding context. The image will be placed into a frame later.
 
 Return ONLY a JSON array of objects with these three fields. No markdown fences.
 
@@ -131,8 +144,10 @@ def design_paintings(text: str, num_paintings: int) -> list[PaintingResult]:
 # ---------------------------------------------------------------------------
 
 IMAGE_PROMPT = (
-    "Generate a photorealistic image of a museum artifact on a clean white "
-    "background. The artifact: {description}"
+    "Generate a photorealistic image of a three-dimensional museum artifact "
+    "sitting on a small display podium against a clean white background. "
+    "The object should have clear volume and depth, viewed at a slight "
+    "three-quarter angle to showcase its 3D form. The artifact: {description}"
 )
 
 
@@ -184,7 +199,10 @@ def generate_artifact_image(visual_description: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 PAINTING_IMAGE_PROMPT = (
-    "Generate a beautiful museum painting. The painting: {description}"
+    "Generate ONLY the artwork itself – do NOT include any frame, border, "
+    "wall, gallery background, or museum setting. The image should be the "
+    "raw painted scene filling the entire canvas edge to edge with no "
+    "surrounding elements. The painting: {description}"
 )
 
 
