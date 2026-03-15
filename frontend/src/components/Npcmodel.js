@@ -23,7 +23,7 @@ export default function NPCModel({
 }) {
   const group = useRef();
   const fbx = useFBX(url);
-  console.log(fbx.animations.map(a => a.name));
+  // console.log(fbx.animations.map(a => a.name));
 
   const { clone, clonedAnims } = useMemo(() => {
     const clone = SkeletonUtils.clone(fbx);

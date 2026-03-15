@@ -4,26 +4,35 @@ import os
 import threading
 import time
 import uuid
-from rag_agent.rag import rag
+from rag_agent.rag import rag, ingest_local_file as rag_ingest_file
 from flask import Flask, Response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PyPDF2 import PdfReader
 
-from models import ArtifactResult, JobResult
-from gemini_client import design_world, generate_artifact_image
+from models import ArtifactResult, JobResult, PaintingResult, PaintingJobResult
+from gemini_client import design_world, generate_artifact_image, design_paintings, generate_painting_image
 from model_generator import generate_model, GENERATED_MODELS_DIR
+from quiz.quiz import quiz
+
+GENERATED_PAINTINGS_DIR = os.path.join("static", "paintings")
+os.makedirs(GENERATED_PAINTINGS_DIR, exist_ok=True)
+
+UPLOADS_DIR = os.path.join("static", "uploads")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 app = Flask(__name__, static_folder="static")
 app.register_blueprint(rag, url_prefix="/agent")
+app.register_blueprint(quiz, url_prefix="/quiz")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
 CORS(app)
 
 MAX_TEXT_CHARS = 500_000  # ~125K tokens — safe margin for Gemini context window
 
 # ---------------------------------------------------------------------------
-# In-memory job store
+# In-memory stores
 # ---------------------------------------------------------------------------
 jobs: dict[str, JobResult] = {}
+painting_jobs: dict[str, PaintingJobResult] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +40,20 @@ jobs: dict[str, JobResult] = {}
 # ---------------------------------------------------------------------------
 
 def _extract_text(req) -> str:
-    """Extract text from the request – either a ``text`` field or a PDF upload."""
+    """Extract text via pdf_key, inline text, or legacy file upload."""
+    body = req.get_json(silent=True) or {}
+
+    # 1. Look up previously-uploaded PDF by key (read from disk)
+    pdf_key = req.form.get("pdf_key") or body.get("pdf_key", "")
+    if pdf_key:
+        pdf_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
+        if not os.path.isfile(pdf_path):
+            return ""  # invalid key
+        reader = PdfReader(pdf_path)
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        return text[:MAX_TEXT_CHARS]
+
+    # 2. Legacy: inline file upload
     if "file" in req.files:
         file = req.files["file"]
         if file.filename and file.filename.lower().endswith(".pdf"):
@@ -39,8 +61,8 @@ def _extract_text(req) -> str:
             text = "\n".join(page.extract_text() or "" for page in reader.pages)
             return text[:MAX_TEXT_CHARS]
 
-    # Fall back to plaintext field (form-data or JSON body)
-    text = req.form.get("text") or (req.get_json(silent=True) or {}).get("text", "")
+    # 3. Fall back to plaintext field
+    text = req.form.get("text") or body.get("text", "")
     return text[:MAX_TEXT_CHARS]
 
 
@@ -76,11 +98,73 @@ def _process_job(job_id: str):
     job.status = "complete"
 
 
+def _process_painting_job(job_id: str):
+    """Background thread: generate an image for every painting."""
+    job = painting_jobs.get(job_id)
+    if not job:
+        return
+
+    job.status = "in_progress"
+
+    for painting in job.paintings:
+        try:
+            painting.status = "generating_image"
+            image_bytes = generate_painting_image(painting.visual_description)
+
+            out_path = os.path.join(GENERATED_PAINTINGS_DIR, f"{painting.id}.png")
+            with open(out_path, "wb") as f:
+                f.write(image_bytes)
+
+            painting.image_url = f"/paintings/{painting.id}.png"
+            painting.status = "complete"
+        except Exception as exc:
+            painting.status = "error"
+            painting.error = str(exc)
+
+    job.status = "complete"
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
 
-@app.route("/design", methods=["POST"])
+@app.route("/upload", methods=["POST"])
+def upload_pdf():
+    """Upload a PDF, extract & store its text, return a ``pdf_key``."""
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided."}), 400
+
+    file = request.files["file"]
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Only PDF files are accepted."}), 400
+
+    raw = file.read()
+    reader = PdfReader(io.BytesIO(raw))
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    text = text[:MAX_TEXT_CHARS]
+
+    if not text.strip():
+        return jsonify({"error": "Could not extract any text from the PDF."}), 400
+
+    pdf_key = str(uuid.uuid4())
+
+    # Persist PDF to disk
+    out_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
+    with open(out_path, "wb") as f:
+        f.write(raw)
+
+    # Auto-ingest into RAG vector store so quiz & agent are ready
+    try:
+        rag_ingest_file(out_path)
+    except Exception as exc:
+        # Non-fatal: the PDF is saved, RAG just won't have it yet
+        import logging
+        logging.getLogger(__name__).warning("Auto-ingest failed: %s", exc)
+
+    return jsonify({"pdf_key": pdf_key, "char_count": len(text)})
+
+
+@app.route("/artifacts/design", methods=["POST"])
 def design():
     """Accept text/PDF + num_artifacts, return artifact list, kick off 3D gen."""
     try:
@@ -107,7 +191,7 @@ def design():
     return jsonify(job.model_dump())
 
 
-@app.route("/design/stream/<job_id>")
+@app.route("/artifacts/stream/<job_id>")
 def design_stream(job_id):
     """SSE endpoint – pushes ``artifact_update`` events as models finish."""
     if job_id not in jobs:
@@ -144,6 +228,77 @@ def design_stream(job_id):
 def serve_model(filename):
     """Serve generated .glb files from the models directory."""
     return send_from_directory(GENERATED_MODELS_DIR, filename)
+
+
+# ---------------------------------------------------------------------------
+# Painting routes
+# ---------------------------------------------------------------------------
+
+@app.route("/paintings/design", methods=["POST"])
+def paintings_design():
+    """Accept text/PDF + num_paintings, return painting list, kick off image gen."""
+    try:
+        val = request.form.get("num_paintings") or (request.get_json(silent=True) or {}).get("num_paintings")
+        if not val:
+            raise ValueError("num_paintings is required")
+        num_paintings = int(val)
+    except (ValueError, TypeError) as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    text = _extract_text(request)
+    if not text.strip():
+        return jsonify({"error": "No text content provided. Send a 'text' field or upload a PDF."}), 400
+
+    try:
+        paintings = design_paintings(text, num_paintings)
+    except Exception as exc:
+        return jsonify({"error": f"Failed to generate paintings: {exc}"}), 500
+
+    job_id = str(uuid.uuid4())
+    job = PaintingJobResult(job_id=job_id, paintings=paintings, status="pending")
+    painting_jobs[job_id] = job
+
+    threading.Thread(target=_process_painting_job, args=(job_id,), daemon=True).start()
+
+    return jsonify(job.model_dump())
+
+
+@app.route("/paintings/stream/<job_id>")
+def paintings_stream(job_id):
+    """SSE endpoint – pushes ``painting_update`` events as images finish."""
+    if job_id not in painting_jobs:
+        return jsonify({"error": "Job not found"}), 404
+
+    def event_stream():
+        job = painting_jobs[job_id]
+        last_statuses: dict[str, str] = {p.id: p.status for p in job.paintings}
+
+        while True:
+            for painting in job.paintings:
+                if painting.status != last_statuses.get(painting.id):
+                    last_statuses[painting.id] = painting.status
+                    payload = {
+                        "id": painting.id,
+                        "name": painting.name,
+                        "status": painting.status,
+                        "image_url": painting.image_url,
+                        "error": painting.error,
+                    }
+                    yield f"event: painting_update\ndata: {json.dumps(payload)}\n\n"
+
+            if job.status == "complete":
+                yield f"event: job_complete\ndata: {json.dumps({'job_id': job_id})}\n\n"
+                break
+
+            time.sleep(1)
+
+    return Response(event_stream(), content_type="text/event-stream")
+
+
+@app.route("/paintings/<path:filename>")
+def serve_painting(filename):
+    """Serve generated painting images."""
+    return send_from_directory(GENERATED_PAINTINGS_DIR, filename)
 
 
 @app.errorhandler(413)
