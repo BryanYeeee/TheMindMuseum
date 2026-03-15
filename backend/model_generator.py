@@ -19,6 +19,23 @@ os.makedirs(GENERATED_MODELS_DIR, exist_ok=True)
 POLL_INTERVAL = 5  # seconds between status checks
 POLL_TIMEOUT = 600  # max seconds to wait for a single model
 
+# Retry settings for transient server errors (502, 503, 504, connection errors)
+SUBMIT_MAX_RETRIES = 12       # max retries for the initial /send request
+SUBMIT_RETRY_INITIAL = 10    # initial backoff seconds for /send retries
+SUBMIT_RETRY_MAX = 60        # max backoff seconds for /send retries
+POLL_RETRY_BACKOFF_MAX = 30  # max backoff seconds for status poll retries
+
+_RETRIABLE_STATUS_CODES = {502, 503, 504}
+
+
+def _is_retriable(exc: Exception) -> bool:
+    """Return True if the exception represents a transient server error."""
+    if isinstance(exc, requests.exceptions.ConnectionError):
+        return True
+    if isinstance(exc, requests.exceptions.HTTPError) and exc.response is not None:
+        return exc.response.status_code in _RETRIABLE_STATUS_CODES
+    return False
+
 
 def generate_model(image_bytes: bytes, artifact_id: str) -> str:
     """Submit an image to Hunyuan3D, poll until done, save .glb, return URL path.
@@ -50,17 +67,35 @@ def generate_model(image_bytes: bytes, artifact_id: str) -> str:
         "guidance_scale": 5.0,
     }
 
-    # ---- submit async job ------------------------------------------------
+    # ---- submit async job (with retry on transient errors) ---------------
     logger.info("Submitting model generation for artifact %s", artifact_id)
-    resp = requests.post(f"{HUNYUAN3D_API_URL}/send", json=payload, timeout=30)
-    resp.raise_for_status()
-    uid = resp.json().get("uid")
-    if not uid:
-        raise RuntimeError("No uid returned from Hunyuan3D /send")
+    uid = None
+    backoff = SUBMIT_RETRY_INITIAL
+
+    for attempt in range(1, SUBMIT_MAX_RETRIES + 1):
+        try:
+            resp = requests.post(f"{HUNYUAN3D_API_URL}/send", json=payload, timeout=30)
+            resp.raise_for_status()
+            uid = resp.json().get("uid")
+            if not uid:
+                raise RuntimeError("No uid returned from Hunyuan3D /send")
+            break
+        except Exception as e:
+            if _is_retriable(e) and attempt < SUBMIT_MAX_RETRIES:
+                logger.warning(
+                    "Submit attempt %d/%d failed (artifact %s): %s — retrying in %ds",
+                    attempt, SUBMIT_MAX_RETRIES, artifact_id, e, backoff,
+                )
+                time.sleep(backoff)
+                backoff = min(backoff * 1.5, SUBMIT_RETRY_MAX)
+            else:
+                raise
+
     logger.info("Hunyuan3D job uid=%s for artifact %s", uid, artifact_id)
 
-    # ---- poll for completion ---------------------------------------------
+    # ---- poll for completion (with backoff on transient errors) -----------
     deadline = time.time() + POLL_TIMEOUT
+    consecutive_errors = 0
 
     while time.time() < deadline:
         try:
@@ -69,9 +104,15 @@ def generate_model(image_bytes: bytes, artifact_id: str) -> str:
             )
             status_resp.raise_for_status()
             data = status_resp.json()
+            consecutive_errors = 0  # reset on success
         except Exception as e:
-            logger.warning("Status poll failed (uid=%s): %s", uid, e)
-            time.sleep(POLL_INTERVAL)
+            consecutive_errors += 1
+            wait = min(POLL_INTERVAL * (1.5 ** consecutive_errors), POLL_RETRY_BACKOFF_MAX)
+            logger.warning(
+                "Status poll failed (uid=%s, attempt %d): %s — retrying in %.0fs",
+                uid, consecutive_errors, e, wait,
+            )
+            time.sleep(wait)
             continue
 
         status = data.get("status", "unknown")

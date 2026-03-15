@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify, request
 from openai import OpenAI
 from railtracks.vector_stores import ChromaVectorStore, Chunk
 from sentence_transformers import SentenceTransformer
+import shutil
 
 rag = Blueprint("rag", __name__)
 load_dotenv()
@@ -36,6 +37,19 @@ _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 def embedding_function(texts: list[str]) -> list[list[float]]:
     return _embed_model.encode(texts).tolist()
 
+
+def reset_store():
+    global store
+    chroma_path = "./chroma_db"
+    if os.path.exists(chroma_path):
+        shutil.rmtree(chroma_path)
+        print("🗑️ Deleted existing chroma_db")
+    store = ChromaVectorStore(
+        collection_name="museum-docs",
+        embedding_function=embedding_function,
+        path=chroma_path,
+    )
+    print("✅ Fresh store created")
 
 # ── Vector store ──────────────────────────────────────────────────────────────
 
@@ -168,21 +182,51 @@ def ingest_local_file(path: str):
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 
+UPLOADS_DIR = os.path.join("static", "uploads")
+global_pdf_key = ""
+
+
 @rag.route("/")
 def index_rag():
     return "rag port"
 
 @rag.route("/ingest", methods=["POST"])
 def ingest():
+    """Ingest a PDF into the vector store.
+
+    Accepts either:
+      - a ``pdf_key`` in the JSON body (looks up the previously-uploaded file), or
+      - a file upload (legacy).
+    """
+    body = request.get_json(silent=True) or {}
+    pdf_key = body.get("pdf_key", "")
+    print(f"📥 Ingest request received with pdf_key='{pdf_key}'"    )
+    if pdf_key:
+        global_pdf_key = pdf_key
+        # Use the already-uploaded PDF on disk
+        stored_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
+        if not os.path.isfile(stored_path):
+            return jsonify({"error": f"No uploaded PDF found for key '{pdf_key}'"}), 404
+
+        try:
+            
+            chunks = pdf_to_chunks(stored_path, f"{pdf_key}.pdf")
+            ids = store.upsert(chunks)
+            return jsonify({"success": True, "source": pdf_key, "chunks": len(ids)})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    # Legacy: file upload
     file = request.files.get("file")
     if not file:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": "No file or pdf_key provided"}), 400
 
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         file.save(tmp.name)
         tmp_path = tmp.name
 
     try:
+        reset_store()
         chunks = pdf_to_chunks(tmp_path, file.filename)
         ids = store.upsert(chunks)
         return jsonify({"success": True, "source": file.filename, "chunks": len(ids)})

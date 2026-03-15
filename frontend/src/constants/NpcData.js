@@ -1,89 +1,136 @@
 export const npcData = [
   {
-    segmentID: 'tile-1-0',
-    url: '/models/happy_joe.fbx',
-    position: [-5, 0, -7], // Keeps original relative offset
-    rotation: [0, 2.5, 0],
-    scale: 0.019,
-    idleAnim: 'mixamo.com',
-    name: 'Joe',
-    quizTopic: 'a key concept or main idea from the study material',
-    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
-  },
-  {
-    segmentID: 'tile-1-0',
-    url: '/models/lebron.fbx',
-    position: [-9.5, 0, 1.5],
-    rotation: [0, 4, 0],
-    scale: 0.0195,
-    idleAnim: 'mixamo.com',
-    name: 'Lebron',
-    quizTopic: 'an important definition or term from the study material',
-    dialogue: "I'm not just here for the art. I'm here for the culture. Also, have you seen the gift shop?",
-  },
-  {
-    segmentID: 'tile-0-1', // Moved to the top-right segment
-    url: '/models/happy_guy.fbx',
-    position: [5, 0, 5.5], // Adjusted X to be relative to the tile start
-    rotation: [0, -1, 0],
-    scale: 0.019,
-    idleAnim: 'mixamo.com',
-    name: 'Visitor',
-    quizTopic: 'a specific fact, event, or example from the study material',
-    dialogue: "Incredible, isn't it? I've been coming here every weekend for the past three years. Still haven't figured out what that sculpture is supposed to mean.",
-  },
-  {
-    segmentID: 'tile-1-1', 
-    url: '/models/happy_person.fbx',
-    position: [8, 0, 5.5],
-    rotation: [0, -0.5, 0],
-    scale: 0.019,
-    idleAnim: 'mixamo.com',
-    name: 'Gallery Guest',
-    quizTopic: 'a cause-and-effect relationship or process described in the study material',
-    dialogue: "Oh! Sorry, I didn't see you there. I was just admiring the lighting in this room. Very dramatic, don't you think?",
-  },
-  {
-    segmentID: 'tile-2-1',
-    url: '/models/yes.fbx',
-    position: [12.5, 0, -1.2],
-    rotation: [0, -0.5, 0],
-    scale: 0.0085,
-    idleAnim: 'mixamo.com',
-    name: 'Curator',
-    quizTopic: 'a technical detail, classification, or methodology from the study material',
-    dialogue: "Yes, yes, excellent eye. This piece dates back to... well, I don't actually know. The placard fell off last Tuesday.",
-  },
-  {
-    segmentID: 'tile-2-1',
-    url: '/models/talking.fbx',
-    position: [12.5, 0, 1.2],
-    rotation: [0, 3.5, 0],
-    scale: 0.019,
-    idleAnim: 'mixamo.com',
-    name: 'Art Critic',
-    quizTopic: 'a comparison, contrast, or relationship between two ideas in the study material',
-    dialogue: "You see, the juxtaposition of form and negative space here creates a dialogue between the observer and the observed. Or maybe it's just a vase. Hard to say.",
-  },
-  {
-    segmentID: 'tile-3-0',
-    url: '/models/jody.fbx',
-    position: [-5, 0, -5.5], // Adjusted X to be local to the left-side tile
-    rotation: [0, 2, 0],
-    scale: 0.019,
-    idleAnim: 'mixamo.com',
-    name: 'Jody',
-    quizTopic: 'an obscure or surprising detail from the study material that most people overlook',
-    dialogue: "Psst — between you and me, the best exhibit is in the back room. They keep it hidden because it's too powerful.",
-  },
-  {
-    segmentID: 'tile-4-1', // Placed in the entrance/bottom segment
+    segmentID: 'tile-0-1',
     url: '/models/reception.fbx',
-    position: [1.2, 0, -6.75],
-    rotation: [0, 0, 0],
+    position: [-6.9, 0, -11.5], // Keeps original relative offset
+    rotation: [0, Math.PI/2, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Receptionist',
     dialogue: "Good day! Audio guides are $5, maps are free. Please don't touch the exhibits. Or the walls. Or the floor, if you can help it.",
   },
+  
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-23.5, 0, -14], // Keeps original relative offset
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-15.9, 0, -14], // Keeps original relative offset
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-3.62, 0, -15], // Keeps original relative offset
+    rotation: [0, -2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-7, 0, -6], // Keeps original relative offset
+    rotation: [0, 0.2, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-15.42, 0, -5.67], // Keeps original relative offset
+    rotation: [0, 0.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-0',
+    url: '/models/happy_joe.fbx',
+    position: [-23.55, 0, -5], // Keeps original relative offset
+    rotation: [0, 0.7, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+
+  
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-23.5, 0, -14], // Keeps original relative offset
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-15.9, 0, -14], // Keeps original relative offset
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-3.62, 0, -15], // Keeps original relative offset
+    rotation: [0, -2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-7, 0, -6], // Keeps original relative offset
+    rotation: [0, 0.2, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-15.42, 0, -5.67], // Keeps original relative offset
+    rotation: [0, 0.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-1-1',
+    url: '/models/happy_joe.fbx',
+    position: [-23.55, 0, -5], // Keeps original relative offset
+    rotation: [0, 0.7, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+
 ]

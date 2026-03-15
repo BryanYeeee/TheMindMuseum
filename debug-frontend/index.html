@@ -321,6 +321,8 @@
             }
 
             // ---- Submit ----
+            let currentPdfKey = null;
+
             submitBtn.addEventListener("click", async () => {
                 const base = getBase();
                 const numArtifacts = parseInt($("#num-artifacts").value, 10);
@@ -334,24 +336,57 @@
 
                 submitBtn.disabled = true;
                 artifactsEl.innerHTML = "";
-                log(
-                    `POST ${base}/design  (num_artifacts=${numArtifacts})`,
-                    "log-info",
-                );
 
                 try {
-                    const formData = new FormData();
-                    formData.append("num_artifacts", numArtifacts);
-                    if (pdfFile) {
-                        formData.append("file", pdfFile);
-                    } else {
-                        formData.append("text", text);
+                    // If a PDF is provided, upload it first to get a pdf_key
+                    if (pdfFile && !currentPdfKey) {
+                        log(`Uploading PDF...`, "log-info");
+                        const uploadForm = new FormData();
+                        uploadForm.append("file", pdfFile);
+                        const uploadResp = await fetch(`${base}/upload`, {
+                            method: "POST",
+                            body: uploadForm,
+                        });
+                        const uploadData = await uploadResp.json();
+                        if (!uploadResp.ok) {
+                            log(
+                                `Upload error: ${uploadData.error || JSON.stringify(uploadData)}`,
+                                "log-err",
+                            );
+                            submitBtn.disabled = false;
+                            return;
+                        }
+                        currentPdfKey = uploadData.pdf_key;
+                        log(
+                            `PDF uploaded → pdf_key=${currentPdfKey}`,
+                            "log-ok",
+                        );
                     }
 
-                    const resp = await fetch(`${base}/design`, {
-                        method: "POST",
-                        body: formData,
-                    });
+                    log(
+                        `POST ${base}/artifacts/design  (num_artifacts=${numArtifacts})`,
+                        "log-info",
+                    );
+
+                    let resp;
+                    if (currentPdfKey) {
+                        resp = await fetch(`${base}/artifacts/design`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                pdf_key: currentPdfKey,
+                                num_artifacts: numArtifacts,
+                            }),
+                        });
+                    } else {
+                        const formData = new FormData();
+                        formData.append("num_artifacts", numArtifacts);
+                        formData.append("text", text);
+                        resp = await fetch(`${base}/artifacts/design`, {
+                            method: "POST",
+                            body: formData,
+                        });
+                    }
 
                     const data = await resp.json();
 
@@ -400,7 +435,7 @@
             // ---- SSE ----
             function connectSSE(jobId) {
                 const base = getBase();
-                const url = `${base}/design/stream/${jobId}`;
+                const url = `${base}/artifacts/stream/${jobId}`;
                 log(`SSE connecting → ${url}`, "log-info");
 
                 const evtSource = new EventSource(url);
