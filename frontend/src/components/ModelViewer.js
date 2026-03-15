@@ -61,7 +61,8 @@ export default function ModelViewer({
         _dflush();
     }, []);
 
-    const midSectionCount = Math.ceil(numArtifacts / 6);
+    const midSectionCount = Math.max(Math.ceil(numPaintings/8), Math.ceil(Math.min(1, numArtifacts) / 6));
+    console.log(`Calculated midSectionCount=${midSectionCount} for numPaintings=${numPaintings} and numArtifacts=${numArtifacts}`);
     const dynamicMap = [
         [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat

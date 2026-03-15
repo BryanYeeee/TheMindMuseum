@@ -55,27 +55,27 @@ export default function Model({
         const localPlayerPos = new THREE.Vector3().copy(camera.position);
         groupRef.current.worldToLocal(localPlayerPos);
 
-        triggers.forEach((trigger) => {
-            const [tx, ty, tz] = trigger.position;
-            const hW = (trigger.width || 2) / 2;
-            const hD = (trigger.depth || 2) / 2;
+        // triggers.forEach((trigger) => {
+        //     const [tx, ty, tz] = trigger.position;
+        //     const hW = (trigger.width || 2) / 2;
+        //     const hD = (trigger.depth || 2) / 2;
 
-            // Collision check happens in LOCAL space
-            if (
-                Math.abs(localPlayerPos.x - tx) < hW &&
-                Math.abs(localPlayerPos.z - tz) < hD
-            ) {
-                foundTrigger = trigger;
-            }
-        });
+        //     // Collision check happens in LOCAL space
+        //     if (
+        //         Math.abs(localPlayerPos.x - tx) < hW &&
+        //         Math.abs(localPlayerPos.z - tz) < hD
+        //     ) {
+        //         foundTrigger = trigger;
+        //     }
+        // });
 
-        if (foundTrigger && activeTriggerId.current !== foundTrigger.id) {
-            activeTriggerId.current = foundTrigger.id;
-            setDialogue(foundTrigger.message);
-        } else if (!foundTrigger && activeTriggerId.current !== null) {
-            activeTriggerId.current = null;
-            setDialogue(null);
-        }
+        // if (foundTrigger && activeTriggerId.current !== foundTrigger.id) {
+        //     activeTriggerId.current = foundTrigger.id;
+        //     setDialogue(foundTrigger.message);
+        // } else if (!foundTrigger && activeTriggerId.current !== null) {
+        //     activeTriggerId.current = null;
+        //     setDialogue(null);
+        // }
     });
 
     return (
