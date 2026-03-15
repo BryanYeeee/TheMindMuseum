@@ -42,8 +42,8 @@ def embedding_function(texts: list[str]) -> list[list[float]]:
 def reset_store():
     global store
     chroma_path = "./chroma_db"
-    if os.path.exists(chroma_path):
-        shutil.rmtree(chroma_path)
+    if os.path.exists(CHROMA_PATH):
+        shutil.rmtree(CHROMA_PATH)
         print("🗑️ Deleted existing chroma_db")
     store = ChromaVectorStore(
         collection_name="museum-docs",
