@@ -33,7 +33,6 @@ MAX_TEXT_CHARS = 500_000  # ~125K tokens — safe margin for Gemini context wind
 # ---------------------------------------------------------------------------
 jobs: dict[str, JobResult] = {}
 painting_jobs: dict[str, PaintingJobResult] = {}
-uploaded_pdfs: dict[str, str] = {}  # pdf_key → extracted text
 
 
 # ---------------------------------------------------------------------------
@@ -44,12 +43,14 @@ def _extract_text(req) -> str:
     """Extract text via pdf_key, inline text, or legacy file upload."""
     body = req.get_json(silent=True) or {}
 
-    # 1. Look up previously-uploaded PDF by key
+    # 1. Look up previously-uploaded PDF by key (read from disk)
     pdf_key = req.form.get("pdf_key") or body.get("pdf_key", "")
     if pdf_key:
-        text = uploaded_pdfs.get(pdf_key)
-        if not text:
+        pdf_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
+        if not os.path.isfile(pdf_path):
             return ""  # invalid key
+        reader = PdfReader(pdf_path)
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
         return text[:MAX_TEXT_CHARS]
 
     # 2. Legacy: inline file upload
@@ -146,9 +147,8 @@ def upload_pdf():
         return jsonify({"error": "Could not extract any text from the PDF."}), 400
 
     pdf_key = str(uuid.uuid4())
-    uploaded_pdfs[pdf_key] = text
 
-    # Persist to disk so the file survives restarts (optional)
+    # Persist PDF to disk
     out_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
     with open(out_path, "wb") as f:
         f.write(raw)
