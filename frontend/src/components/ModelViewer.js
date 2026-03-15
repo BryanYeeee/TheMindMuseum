@@ -173,7 +173,7 @@ export default function ModelViewer ({ numArtifacts, numPaintings, initialArtifa
                             if (msg) setNpcDialogue(null);
                         }}
                         setNpcDialogue={handleNpcClick}
-                        liveExhibits={liveExhibits}
+                        liveExhibits={[...liveExhibits, ...livePaintings]}
                         openExhibit={openExhibit}
                     />
 

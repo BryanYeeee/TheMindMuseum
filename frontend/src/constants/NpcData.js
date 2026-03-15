@@ -1,14 +1,47 @@
 export const npcData = [
   {
-    segmentID: 'tile-1-0',
+    segmentID: 'tile-0-0',
     url: '/models/happy_joe.fbx',
-    position: [-5, 0, -7], // Keeps original relative offset
+    position: [-23.5, 0, -14], // Keeps original relative offset
     rotation: [0, 2.5, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Joe',
     dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
   },
+  {
+    segmentID: 'tile-0-0',
+    url: '/models/happy_joe.fbx',
+    position: [-15.9, 0, -14], // Keeps original relative offset
+    rotation: [0, 2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-0-0',
+    url: '/models/happy_joe.fbx',
+    position: [-3.62, 0, -13], // Keeps original relative offset
+    rotation: [0, -2.5, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+  {
+    segmentID: 'tile-0-0',
+    url: '/models/happy_joe.fbx',
+    position: [-7, 0, -6], // Keeps original relative offset
+    rotation: [0, -0.0, 0],
+    scale: 0.019,
+    idleAnim: 'mixamo.com',
+    name: 'Joe',
+    dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
+  },
+
+
+
   {
     segmentID: 'tile-1-0',
     url: '/models/lebron.fbx',
