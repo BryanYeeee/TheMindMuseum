@@ -70,10 +70,10 @@ export const npcData = [
     dialogue: "Psst — between you and me, the best exhibit is in the back room. They keep it hidden because it's too powerful.",
   },
   {
-    segmentID: 'tile-4-1', // Placed in the entrance/bottom segment
+    segmentID: 'tile-0-1',
     url: '/models/reception.fbx',
-    position: [1.2, 0, -6.75],
-    rotation: [0, 0, 0],
+    position: [-6.9, 0, -11.5], // Keeps original relative offset
+    rotation: [0, Math.PI/2, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
     name: 'Receptionist',

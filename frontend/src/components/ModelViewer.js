@@ -13,6 +13,7 @@ import ExhibitViewer from './ExhibitViewer'
 import { npcData } from '@/constants/NpcData'
 import NPCHitbox from './NpcHitbox'
 import Tileset from './TileSet'
+import MuseumLoader from './MuseumLoader'
 
 const EXHIBIT_POS = {
   1: [-21.5, 2.15, -17.2],
@@ -136,6 +137,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
 
   return (
     <div style={{ width: '100%', height: '100vh', cursor: 'crosshair' }}>
+      <MuseumLoader />
       <Canvas
         shadows='basic'
         camera={{ fov: 75, position: [0, 2.75, 5] }}
@@ -165,7 +167,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
               setDialogue(msg)
               if (msg) setNpcDialogue(null)
             }}
-            setNpcDialogue={setNpcDialogue}
+            setNpcDialogue={handleNpcClick}
             liveExhibits={liveExhibits}
             openExhibit={openExhibit}
           />
