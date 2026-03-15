@@ -221,7 +221,9 @@ def design_stream(job_id):
 
             time.sleep(1)
 
-    return Response(event_stream(), content_type="text/event-stream")
+    return Response(event_stream(), content_type="text/event-stream",
+                    headers={"Cache-Control": "no-cache",
+                             "Access-Control-Allow-Origin": "*"})
 
 
 @app.route("/models/<path:filename>")
@@ -292,7 +294,9 @@ def paintings_stream(job_id):
 
             time.sleep(1)
 
-    return Response(event_stream(), content_type="text/event-stream")
+    return Response(event_stream(), content_type="text/event-stream",
+                    headers={"Cache-Control": "no-cache",
+                             "Access-Control-Allow-Origin": "*"})
 
 
 @app.route("/paintings/<path:filename>")
