@@ -157,6 +157,7 @@ export default function UI({
                                         ["W · A · S · D", "Move"],
                                         ["Mouse", "Look"],
                                         ["Click", "Interact"],
+                                        ["Shift", "Sprint"],
                                     ].map(([key, action]) => (
                                         <div
                                             key={key}

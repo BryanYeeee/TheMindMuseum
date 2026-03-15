@@ -7,7 +7,6 @@ export default function MuseumLoader() {
   const { active, progress } = useProgress()
   const [show, setShow] = useState(true)
 
-  // We add a slight delay after 100% to ensure the "flicker" looks intentional
   useEffect(() => {
     if (!active && progress === 100) {
       const timer = setTimeout(() => setShow(false), 1000)
@@ -20,46 +19,39 @@ export default function MuseumLoader() {
       {show && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 1, ease: "circIn" } }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050505] text-white font-mono"
+          exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center font-lora text-white select-none"
         >
-          {/* Background Grid Decor */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
-          
-          <div className="relative flex flex-col items-center">
-            {/* Glitchy Logo Area */}
-            <motion.h2 
-              animate={{ opacity: [1, 0.8, 1], x: [0, -2, 2, 0] }}
-              transition={{ repeat: Infinity, duration: 0.2 }}
-              className="text-xs tracking-[0.5em] uppercase text-amber-600 mb-8"
-            >
-              Loading Consciousness
-            </motion.h2>
+          {/* Background image — same as landing page */}
+          <div className="absolute inset-0 overflow-hidden">
+            <img
+              src="/images/museum.png"
+              alt=""
+              className="absolute object-cover opacity-80"
+              style={{ width: '115%', height: '115%', top: '-7.5%', left: '-7.5%' }}
+            />
+          </div>
 
-            {/* Progress Bar Container */}
-            <div className="w-64 h-[2px] bg-white/10 relative overflow-hidden">
-              <motion.div 
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-[#050505]/70" />
+
+          {/* Scanline overlay */}
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.08)_2px,rgba(0,0,0,0.08)_4px)] pointer-events-none" />
+
+          {/* Progress */}
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 w-64">
+            <div className="w-full h-[1px] bg-white/10 relative overflow-hidden">
+              <motion.div
                 className="absolute top-0 left-0 h-full bg-amber-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ ease: "easeOut" }}
               />
             </div>
-
-            {/* Binary/Hex Readout */}
-            <div className="mt-4 flex flex-col items-center gap-1">
-              <span className="text-[10px] text-white/30 uppercase tracking-tighter">
-                Synchronizing Tiles... {progress.toFixed(0)}%
-              </span>
-              <span className="text-[8px] text-white/10 uppercase font-mono">
-                {Math.random().toString(16).toUpperCase().substring(2, 12)}
-              </span>
-            </div>
+            <span className="text-white/40 text-[9px] tracking-[0.3em] uppercase">
+              Loading...
+            </span>
           </div>
-
-          {/* Corner Decors */}
-          <div className="absolute top-10 left-10 w-4 h-4 border-t border-l border-white/20" />
-          <div className="absolute bottom-10 right-10 w-4 h-4 border-b border-r border-white/20" />
         </motion.div>
       )}
     </AnimatePresence>
