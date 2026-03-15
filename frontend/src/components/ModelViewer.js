@@ -4,7 +4,6 @@ import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Environment } from "@react-three/drei";
 import { Suspense, useState, useEffect, useRef } from "react";
 import Controller from "./Controller";
-import NPCModel from "./Npcmodel";
 import * as THREE from "three";
 import CoordsLogger from "./CoordsLogger";
 import UI from "./UI";
@@ -25,9 +24,15 @@ const EXHIBIT_POS = {
     7: [-13.36, 1.76, -10],
 };
 
-export default function ModelViewer ({ numArtifacts, numPaintings, initialArtifactData, initialPaintingData, pdfKey }) {
-  const [liveExhibits, setLiveExhibits] = useState([])
-  const [livePaintings, setLivePaintings] = useState([])
+export default function ModelViewer({
+    numArtifacts,
+    numPaintings,
+    initialArtifactData,
+    initialPaintingData,
+    pdfKey,
+}) {
+    const [liveExhibits, setLiveExhibits] = useState([]);
+    const [livePaintings, setLivePaintings] = useState([]);
 
     const midSectionCount = Math.ceil(numArtifacts / 6);
     const dynamicMap = [
