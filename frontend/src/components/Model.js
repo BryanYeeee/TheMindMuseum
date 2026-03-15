@@ -126,6 +126,7 @@ export default function Model({
                     key={npc.url + npc.position.join(",") + `exhibit-${index}`}>
                     <NPCModel
                         url={npc.url}
+                        name={npc.name}
                         position={npc.position}
                         rotation={npc.rotation}
                         scale={npc.scale}
