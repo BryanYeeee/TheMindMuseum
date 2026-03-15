@@ -169,6 +169,7 @@ def ingest_local_file(path: str):
 
 
 UPLOADS_DIR = os.path.join("static", "uploads")
+global_pdf_key = ""
 
 
 @rag.route("/")
@@ -185,14 +186,17 @@ def ingest():
     """
     body = request.get_json(silent=True) or {}
     pdf_key = body.get("pdf_key", "")
+    
 
     if pdf_key:
+        global_pdf_key = pdf_key
         # Use the already-uploaded PDF on disk
         stored_path = os.path.join(UPLOADS_DIR, f"{pdf_key}.pdf")
         if not os.path.isfile(stored_path):
             return jsonify({"error": f"No uploaded PDF found for key '{pdf_key}'"}), 404
 
         try:
+            
             chunks = pdf_to_chunks(stored_path, f"{pdf_key}.pdf")
             ids = store.upsert(chunks)
             return jsonify({"success": True, "source": pdf_key, "chunks": len(ids)})

@@ -13,25 +13,25 @@ function ReceptionistChat({ onClose }) {
     }, []);
 
     const submit = async () => {
-        const q = question.trim();
-        if (!q || thinking) return;
-        setThinking(true);
-        setResponse(null);
-        try {
-            const res = await fetch("http://localhost:5001/agent/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: q }),
-            });
-            const data = await res.json();
-            setResponse(data.answer ?? data.error ?? "No response.");
-        } catch {
-            setResponse("Sorry, I could not reach the server.");
-        } finally {
-            setThinking(false);
-            setQuestion("");
-        }
-    };
+      const q = question.trim()
+      if (!q || thinking) return
+      setThinking(true)
+      setResponse(null)
+      try {
+        const res = await fetch('http://localhost:8000/agent/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q }),
+        })
+        const data = await res.json()
+        setResponse(data.answer ?? data.error ?? 'No response.')
+      } catch {
+        setResponse('Sorry, I could not reach the server.')
+      } finally {
+        setThinking(false)
+        setQuestion('')
+      }
+    }
 
     const handleKey = (e) => {
         if (e.code === "Enter") submit();
