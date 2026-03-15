@@ -75,5 +75,63 @@ export const triggerData = [
     width: 7,
     depth: 2,
     message: 'fuck you.'
+  },
+
+  
+  {
+    segmentID: 'tile-1-1',
+    id: 1,
+    position: positions[1],
+    width: 5,
+    depth: 2,
+    message: 'You are walking through the narrow corridor.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id: 2,
+    position: positions[6],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id: 3,
+    position: positions[2],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id: 4,
+    position: positions[3],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id: 5,
+    position: positions[4],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id:6,
+    position: positions[5],
+    width: 5,
+    depth: 2,
+    message: 'fuck you.'
+  },
+  {
+    segmentID: 'tile-1-1',
+    id: 7,
+    position: positions[7],
+    width: 7,
+    depth: 2,
+    message: 'fuck you.'
   }
 ]

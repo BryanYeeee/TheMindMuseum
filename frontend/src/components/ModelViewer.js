@@ -30,7 +30,7 @@ export default function ModelViewer ({ numArtifacts, numPaintings, initialArtifa
 
     const midSectionCount = Math.ceil(numArtifacts / 6);
     const dynamicMap = [
-        // [0, 4], // Entrance/Top
+        [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
         [0, 3], // Exit/Bottom
     ];

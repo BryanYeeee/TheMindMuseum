@@ -113,8 +113,8 @@ export default function Model ({
         )
       })}
 
-      {npcData.map(npc => (
-        <group key={npc.url + npc.position.join(',')}>
+      {npcData.map((npc, index) => (
+        <group key={npc.url + npc.position.join(',')+`exhibit-${index}`}>
           <NPCModel
             url={npc.url}
             position={npc.position}
@@ -132,7 +132,7 @@ export default function Model ({
         </group>
       ))}
 
-      {triggers.map(trigger => (
+      {/* {triggers.map(trigger => (
         <mesh key={`debug-${trigger.id}`} position={trigger.position}>
           <boxGeometry
             args={[
@@ -150,7 +150,7 @@ export default function Model ({
             renderOrder={10}
           />
         </mesh>
-      ))}
+      ))} */}
     </group>
   )
 }
