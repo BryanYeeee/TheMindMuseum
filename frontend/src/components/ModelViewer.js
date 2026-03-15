@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Environment } from "@react-three/drei";
 import { Suspense, useState, useEffect, useRef } from "react";
 import Controller from "./Controller";
-import NPCModel from "./NpcModel";
+import NPCModel from "./Npcmodel";
 import * as THREE from "three";
 import CoordsLogger from "./CoordsLogger";
 import UI from "./UI";
