@@ -31,6 +31,30 @@ def semantic_similarity(text1: str, text2: str) -> float:
 def index_quiz():
     return "QUIZ!"
 
+_questions_cache = None
+
+def _get_cached_questions():
+    global _questions_cache
+    if _questions_cache is None:
+        from rag_agent.rag import store
+        from rag_agent.utils import generate_quiz
+        _questions_cache = generate_quiz(store, count=12)
+    return _questions_cache
+
+@quiz.route("/question/<int:npc_index>", methods=["GET"])
+def get_question(npc_index):
+    """Return the cached question assigned to a specific NPC by index."""
+    try:
+        questions = _get_cached_questions()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if not questions:
+        return jsonify({"error": "No questions available — upload a PDF first."}), 404
+
+    q = questions[npc_index % len(questions)]
+    return jsonify(q)
+
 @quiz.route("/check", methods=["POST"])
 def check():
     """

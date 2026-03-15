@@ -97,6 +97,74 @@ function ReceptionistChat({ onClose }) {
     );
 }
 
+function NpcQuiz({ question, sampleAnswer }) {
+    const [answer, setAnswer] = useState("");
+    const [feedback, setFeedback] = useState(null);
+    const [checking, setChecking] = useState(false);
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+
+    const submit = async () => {
+        const a = answer.trim();
+        if (!a || checking) return;
+        setChecking(true);
+        setFeedback(null);
+        try {
+            const res = await fetch("http://localhost:5001/quiz/check", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_answers: [a], sample_answers: [sampleAnswer] }),
+            });
+            const data = await res.json();
+            setFeedback(data[0]?.feedback ?? "No feedback.");
+        } catch {
+            setFeedback("Could not reach the server.");
+        } finally {
+            setChecking(false);
+        }
+    };
+
+    const handleKey = (e) => {
+        if (e.code === "Enter") submit();
+    };
+
+    return (
+        <>
+            <p className="px-5 pt-4 pb-2 text-white text-sm leading-relaxed">{question}</p>
+            {feedback && (
+                <p className={`px-5 pb-2 text-sm leading-relaxed ${
+                    feedback.startsWith("That is absolutely correct") ? "text-green-400" :
+                    feedback.startsWith("You made a small mistake") ? "text-amber-400" :
+                    "text-red-400"
+                }`}>
+                    {feedback}
+                </p>
+            )}
+            {!feedback && (
+                <div className="flex items-center gap-2 px-5 pb-4">
+                    <input
+                        ref={inputRef}
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        onKeyDown={handleKey}
+                        placeholder="Your answer…"
+                        className="flex-1 bg-white/10 border border-white/20 text-white text-sm px-3 py-2 outline-none placeholder-white/30 focus:border-amber-500/60 transition-colors"
+                    />
+                    <button
+                        onClick={submit}
+                        disabled={!answer.trim() || checking}
+                        className="px-4 py-2 text-[10px] tracking-[0.2em] uppercase border border-white/20 text-white/70 hover:border-amber-500/60 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                        {checking ? "..." : "Answer"}
+                    </button>
+                </div>
+            )}
+        </>
+    );
+}
+
 export default function UI({
     lastCoords,
     dialogue,
@@ -224,7 +292,7 @@ export default function UI({
                             ))}
                         </div>
 
-                        {/* NPC DIALOGUE BOX */}
+                        {/* NPC DIALOGUE / QUIZ BOX */}
                         <AnimatePresence>
                             {npcDialogue && (
                                 <motion.div
@@ -233,7 +301,7 @@ export default function UI({
                                     animate={{ y: 0, opacity: 1, x: "-50%" }}
                                     exit={{ y: 10, opacity: 0, x: "-50%" }}
                                     transition={{ duration: 0.2 }}
-                                    className="absolute bottom-20 left-1/2 w-full max-w-xl">
+                                    className="absolute bottom-20 left-1/2 w-full max-w-xl pointer-events-auto">
                                     <div className="mx-6 bg-black/80 backdrop-blur-md border border-white/20">
                                         <div className="flex items-center gap-2 px-5 py-2 border-b border-white/20">
                                             <div className="w-1.5 h-1.5 bg-amber-500" />
@@ -241,9 +309,15 @@ export default function UI({
                                                 {npcDialogue.name}
                                             </span>
                                         </div>
-                                        <p className="px-5 py-4 text-white text-sm leading-relaxed">
-                                            {npcDialogue.text}
-                                        </p>
+                                        {npcDialogue.loading ? (
+                                            <p className="px-5 py-4 text-white/50 text-sm italic">Thinking of a question...</p>
+                                        ) : npcDialogue.question ? (
+                                            <NpcQuiz question={npcDialogue.question} sampleAnswer={npcDialogue.sampleAnswer} />
+                                        ) : (
+                                            <p className="px-5 py-4 text-white text-sm leading-relaxed">
+                                                {npcDialogue.text}
+                                            </p>
+                                        )}
                                         <p className="px-5 pb-3 text-white/40 text-[9px] tracking-[0.2em] uppercase text-right">
                                             Tab · Close
                                         </p>

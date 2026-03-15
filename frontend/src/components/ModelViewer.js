@@ -68,11 +68,13 @@ export default function ModelViewer({
         _dflush();
     }, []);
 
-    // Each tile pair (2 columns) holds 6 artifact spots (3 per tile) and
-    // 8 painting spots (4 per tile).  We need enough middle rows for both.
-    const artifactTiles = Math.ceil(numArtifacts / 6);
-    const paintingTiles = Math.ceil(numPaintings / 8);
-    const midSectionCount = Math.max(artifactTiles, paintingTiles, 1);
+    const midSectionCount = Math.max(
+        Math.ceil(numPaintings / 8),
+        Math.ceil(Math.min(1, numArtifacts) / 6),
+    );
+    console.log(
+        `Calculated midSectionCount=${midSectionCount} for numPaintings=${numPaintings} and numArtifacts=${numArtifacts}`,
+    );
     const dynamicMap = [
         [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
@@ -284,29 +286,47 @@ export default function ModelViewer({
         if (!isLocked && !receptionistOpen) setNpcDialogue(null);
     }, [isLocked, receptionistOpen]);
 
-    // Memoize combined exhibits so Tileset doesn't get a new array ref every render
-    const allExhibits = useMemo(
-        () => [...liveExhibits, ...livePaintings],
-        [liveExhibits, livePaintings],
-    );
+    // Freeze camera look when NPC dialogue is open
+    useEffect(() => {
+        if (controlsRef.current) {
+            controlsRef.current.enabled = !npcDialogue;
+        }
+    }, [npcDialogue]);
 
-    // Stable callback refs so Tileset child tiles don't re-render on unrelated state changes
-    const stableSetDialogue = useCallback((msg) => {
-        setDialogue(msg);
-        if (msg) setNpcDialogue(null);
-    }, []);
-
-    const handleNpcClick = useCallback((npc) => {
+    const handleNpcClick = async (npc) => {
         if (npc.name === "Receptionist") {
             setNpcDialogue(null);
             setDialogue(null);
             setReceptionistOpen(true);
             controlsRef.current?.unlock();
         } else {
-            setNpcDialogue({ name: npc.name, text: npc.dialogue });
+            setNpcDialogue({ name: npc.name, loading: true });
             setDialogue(null);
+            try {
+                const res = await fetch(
+                    `http://localhost:5001/quiz/question/${npc.index ?? 0}`,
+                );
+                const data = await res.json();
+                if (data.question) {
+                    setNpcDialogue({
+                        name: npc.name,
+                        question: data.question,
+                        sampleAnswer: data.answer,
+                    });
+                } else {
+                    setNpcDialogue({
+                        name: npc.name,
+                        text: npc.text || npc.dialogue || "Hello there!",
+                    });
+                }
+            } catch {
+                setNpcDialogue({
+                    name: npc.name,
+                    text: npc.text || npc.dialogue || "Hello there!",
+                });
+            }
         }
-    }, []);
+    };
 
     return (
         <div style={{ width: "100%", height: "100vh", cursor: "crosshair" }}>
@@ -366,7 +386,12 @@ export default function ModelViewer({
                         onUnlock={() => setIsLocked(false)}
                     />
                     <Controller
-                        isLocked={isLocked && !exhibit && !receptionistOpen}
+                        isLocked={
+                            isLocked &&
+                            !exhibit &&
+                            !receptionistOpen &&
+                            !npcDialogue
+                        }
                         npcPositions={npcData.map((n) => n.position)}
                     />
                     <CoordsLogger onHit={setLastCoords} />
