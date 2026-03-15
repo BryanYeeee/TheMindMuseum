@@ -54,10 +54,12 @@ def reset_store():
 
 # ── Vector store ──────────────────────────────────────────────────────────────
 
+CHROMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "chroma_db")
+
 store = ChromaVectorStore(
     collection_name="museum-docs",
     embedding_function=embedding_function,
-    path="./chroma_db",
+    path=CHROMA_PATH,
 )
 
 # ── Tool definition ───────────────────────────────────────────────────────────

@@ -21,17 +21,33 @@ def generate_quiz(store, count: int = 5) -> list[dict]:
     """Generate quiz questions from whatever is currently in the Chroma store."""
     try:
         result = store._collection.get()
-        chunks = result.get("documents", [])
+        # actual text is in metadatas.__content__, not documents (which stores filenames)
+        all_chunks = [
+            m.get("__content__", "")
+            for m in result.get("metadatas", [])
+            if m.get("__content__")
+        ]
     except Exception as e:
         print(f"⚠️ Failed to fetch chunks: {e}")
         return []
 
-    if not chunks:
+    if not all_chunks:
+        print("❌ no chunks found")
         return []
 
-    knowledge = "\n\n".join(chunks)
-    if len(knowledge) > 12000:
-        knowledge = knowledge[:12000] + "\n...[truncated]"
+    # deduplicate — same PDF ingested multiple times causes identical chunks
+    seen = set()
+    unique_chunks = []
+    for c in all_chunks:
+        if c not in seen:
+            seen.add(c)
+            unique_chunks.append(c)
+
+    knowledge = "\n\n".join(unique_chunks)
+    if len(knowledge) > 8000:
+        knowledge = knowledge[:8000] + "\n...[truncated]"
+
+    print(f"📦 {len(unique_chunks)} unique chunks, {len(knowledge)} chars")
 
     prompt = f"""You are a museum quiz generator.
 Based on the following knowledge base content, generate exactly {count} quiz questions and answers.
@@ -48,14 +64,21 @@ Each object must have exactly these two fields:
 
 Respond with ONLY the JSON array, no markdown, no explanation."""
 
+    print("generating response")
     response = client.chat.completions.create(
         model="openai/gpt-oss-120b",
         messages=[
             {"role": "system", "content": "You are a museum quiz generator. Always respond with valid JSON only."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=1500,
+        max_tokens=2000,
     )
+    print("response generated")
 
-    raw = strip_fences(response.choices[0].message.content.strip())
+    msg = response.choices[0].message
+    if not msg.content:
+        print(f"❌ model returned no content, finish_reason={response.choices[0].finish_reason}")
+        return []
+
+    raw = strip_fences(msg.content.strip())
     return json.loads(raw)
