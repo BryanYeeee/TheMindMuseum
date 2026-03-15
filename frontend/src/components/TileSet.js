@@ -4,13 +4,13 @@ import { exhibitData } from '@/constants/ExhibitData'
 import { triggerData } from '@/constants/TriggerData'
 import { npcData } from '@/constants/NpcData'
 
-const MAP = [
-  // [0, 4],
-  [1, 2],
-  [1, 2],
-  [1, 2],
-  [0, 3]
-]
+// const MAP = [
+//   [0, 4],
+//   [1, 2],
+//   [1, 2],
+//   [1, 2],
+//   [0, 3]
+// ]
 
 const L = 34.5
 const W = 20
@@ -39,10 +39,16 @@ const MODEL = (xIndex, zIndex) => {
   }
 }
 
-export default function Tileset ({ setDialogue, openExhibit, setNpcDialogue }) {
+export default function Tileset ({
+  map = [],
+  liveExhibits = [],
+  setDialogue,
+  openExhibit,
+  setNpcDialogue
+}) {
   return (
     <>
-      {MAP.map((row, zIndex) =>
+      {map.map((row, zIndex) =>
         row.map((tileType, xIndex) => {
           if (tileType === 0) return null
           const segmentID = `tile-${zIndex}-${xIndex}`
@@ -58,7 +64,7 @@ export default function Tileset ({ setDialogue, openExhibit, setNpcDialogue }) {
               openExhibit={openExhibit}
               mirrored={zIndex % 2 == 0}
               npcData={npcData.filter(npc => npc.segmentID === segmentID)}
-              exhibits={exhibitData.filter(ex => ex.segmentID === segmentID)}
+              exhibits={liveExhibits.filter(ex => ex.segmentID === segmentID && ex.status === 'complete')}
               triggers={triggerData.filter(tr => tr.segmentID === segmentID)}
             />
           )

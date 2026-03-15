@@ -98,8 +98,9 @@ export default function Model ({
       {/* Relative Exhibits */}
       {exhibits.map((exhibit, index) => {
         const commonProps = {
-          url: exhibit.url,
+          model_url: exhibit.model_url,
           position: exhibit.position,
+          posKey: exhibit.posKey,
           rotation: exhibit.rotation || [0, 0, 0],
           scale: exhibit.scale || 1,
           onInteract: () => openExhibit(exhibit)

@@ -245,3 +245,32 @@
       </div>
     )
   }
+
+  // <motion.div
+  //             initial={{ opacity: 0, x: 20 }}
+  //             animate={{ opacity: 1, x: 0 }}
+  //             className='absolute top-12 right-12'
+  //           >
+  //             <Compass heading={heading}/>
+
+  //             {/* Optional: Add a "System Status" line below it to match the top-left */}
+  //             <div className='mt-4 text-right'>
+  //               <p className='text-white/20 text-[8px] tracking-[0.3em] uppercase font-bold'>
+  //                 Stream Signal: Nominal
+  //               </p>
+  //               <div className='flex gap-1 justify-end mt-1'>
+  //                 {[1, 2, 3].map(i => (
+  //                   <motion.div
+  //                     key={i}
+  //                     animate={{ opacity: [0.2, 1, 0.2] }}
+  //                     transition={{
+  //                       repeat: Infinity,
+  //                       duration: 2,
+  //                       delay: i * 0.3
+  //                     }}
+  //                     className='w-1 h-1 bg-amber-600'
+  //                   />
+  //                 ))}
+  //               </div>
+  //             </div>
+  //           </motion.div>

@@ -41,12 +41,12 @@ def generate_model(image_bytes: bytes, artifact_id: str) -> str:
 
     payload = {
         "image": image_b64,
-        "texture": True,
+        "texture": False,
         "seed": 1234,
         "type": "glb",
         "remove_background": True,
-        "octree_resolution": 256,
-        "num_inference_steps": 5,
+        "octree_resolution": 128,
+        "num_inference_steps": 2,
         "guidance_scale": 5.0,
     }
 

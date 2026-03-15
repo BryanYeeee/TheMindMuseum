@@ -14,7 +14,63 @@ import { npcData } from '@/constants/NpcData'
 import NPCHitbox from './NpcHitbox'
 import Tileset from './TileSet'
 
-export default function ModelViewer () {
+const EXHIBIT_POS = {
+  1: [-21.5, 2.15, -17.2],
+  2: [-14.82, 2.9, -19.06],
+  3: [-6.79, 2.9, -19.06],
+  4: [-6.79, 2.9, -0.94],
+  5: [-14.82, 2.9, -0.94],
+  6: [-21.5, 2.15, -2.8],
+  7: [-13.36, 1.76, -10]
+}
+
+export default function ModelViewer ({ numArtifacts, initialJobData }) {
+  const [liveExhibits, setLiveExhibits] = useState(
+    initialJobData?.artifacts || []
+  )
+
+  const midSectionCount = Math.ceil(numArtifacts / 6)
+  const dynamicMap = [
+    [0, 4], // Entrance/Top
+    ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
+    [0, 3] // Exit/Bottom
+  ]
+
+  useEffect(() => {
+  if (!initialJobData) return;
+  
+  const eventSource = new EventSource(
+    `http://localhost:5001/design/stream/${initialJobData.job_id}`
+  );
+  eventSource.addEventListener('artifact_update', event => {
+    const updatedArtifact = JSON.parse(event.data);
+    setLiveExhibits(prev => {
+      const artifactIndex = prev.findIndex(ex => ex.id === updatedArtifact.id);
+      
+      if (artifactIndex === -1) return prev;
+      const { segmentID, position, posKey } = getPlacement(artifactIndex);
+      console.log(`Updating artifact ${updatedArtifact.id} at ${segmentID} with position ${position}`);
+      console.log('Updated artifact data:', updatedArtifact);
+      console.log('model url:',updatedArtifact.model_url)
+      return prev.map((ex, i) =>
+        i === artifactIndex
+          ? { 
+              ...ex, 
+              ...updatedArtifact, 
+              segmentID, 
+              position, 
+              posKey,
+              isLive: true,
+              type: 'artifact'
+            }
+          : ex
+      );
+    });
+  });
+
+  return () => eventSource.close();
+}, [initialJobData?.job_id]);
+
   const [lastCoords, setLastCoords] = useState('Click a surface to get coords')
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
@@ -29,12 +85,15 @@ export default function ModelViewer () {
     audio.loop = true
     audio.volume = 0.4
     audioRef.current = audio
-    return () => { audio.pause(); audio.src = '' }
+    return () => {
+      audio.pause()
+      audio.src = ''
+    }
   }, [])
 
   // Close dialogue on E key
   useEffect(() => {
-    const handleKey = (e) => {
+    const handleKey = e => {
       if (e.code === 'Tab') {
         e.preventDefault()
         setNpcDialogue(null)
@@ -51,18 +110,19 @@ export default function ModelViewer () {
 
   // Start music on first pointer lock (browsers require a user gesture)
   useEffect(() => {
-    if (isLocked && audioRef.current?.paused) audioRef.current.play().catch(() => {})
+    if (isLocked && audioRef.current?.paused)
+      audioRef.current.play().catch(() => {})
   }, [isLocked])
 
   // Don't exit pointer lock when opening — keeps the lock so E can close and return directly
-  const openExhibit = (data) => setExhibit(data)
+  const openExhibit = data => setExhibit(data)
 
   // Clear NPC dialogue when the player pauses (pointer unlock)
   useEffect(() => {
     if (!isLocked && !receptionistOpen) setNpcDialogue(null)
   }, [isLocked, receptionistOpen])
 
-  const handleNpcClick = (npc) => {
+  const handleNpcClick = npc => {
     if (npc.name === 'Receptionist') {
       setNpcDialogue(null)
       setDialogue(null)
@@ -100,8 +160,13 @@ export default function ModelViewer () {
           />
 
           <Tileset
-            setDialogue={(msg) => { setDialogue(msg); if (msg) setNpcDialogue(null) }}
+            map={dynamicMap}
+            setDialogue={msg => {
+              setDialogue(msg)
+              if (msg) setNpcDialogue(null)
+            }}
             setNpcDialogue={setNpcDialogue}
+            liveExhibits={liveExhibits}
             openExhibit={openExhibit}
           />
 
@@ -128,7 +193,10 @@ export default function ModelViewer () {
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
           />
-          <Controller isLocked={isLocked && !exhibit && !receptionistOpen} npcPositions={npcData.map(n => n.position)} />
+          <Controller
+            isLocked={isLocked && !exhibit && !receptionistOpen}
+            npcPositions={npcData.map(n => n.position)}
+          />
           <CoordsLogger onHit={setLastCoords} />
         </Suspense>
       </Canvas>
@@ -139,9 +207,31 @@ export default function ModelViewer () {
         isLocked={isLocked}
         onResume={() => controlsRef.current?.lock()}
         receptionistOpen={receptionistOpen}
-        onCloseReceptionist={() => { setReceptionistOpen(false); controlsRef.current?.lock() }}
+        onCloseReceptionist={() => {
+          setReceptionistOpen(false)
+          controlsRef.current?.lock()
+        }}
       />
-      <ExhibitViewer exhibit={exhibit} onClose={() => setExhibit(null)} onResume={() => controlsRef.current?.lock()} />
+      <ExhibitViewer
+        exhibit={exhibit}
+        onClose={() => setExhibit(null)}
+        onResume={() => controlsRef.current?.lock()}
+      />
     </div>
   )
 }
+
+const getPlacement = (index) => {
+  const spots = [1, 6, 7]; // The specific POS keys you requested
+  const spotsPerTile = spots.length;
+  
+  // Determine which middle row/column it belongs to
+  const tileIndex = Math.floor(index / spotsPerTile);
+  const z = Math.floor(tileIndex / 2) + 1; // Start from row 1
+  const x = tileIndex % 2; // Alternates between 0 and 1
+  
+  const segmentID = `tile-${z}-${x}`;
+  const posKey = spots[index % spotsPerTile];
+  
+  return { segmentID, position: EXHIBIT_POS[posKey], posKey };
+};

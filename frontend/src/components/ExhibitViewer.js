@@ -4,9 +4,9 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, useTexture } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
 
-function ViewerObject ({ url }) {
+function ViewerObject ({ model_url }) {
   const ref = useRef()
-  const { scene } = url ? useGLTF(url) : { scene: null }
+  const { scene } = model_url ? useGLTF(`http://localhost:5001${model_url}`) : { scene: null }
   useFrame((_, delta) => {
     if (ref.current) ref.current.rotation.y += delta * 0.6
   })
@@ -24,8 +24,8 @@ function ViewerObject ({ url }) {
   )
 }
 
-function ViewerPainting ({ url }) {
-  const texture = useTexture(url || '/images/placeholder.png')
+function ViewerPainting ({ model_url }) {
+  const texture = useTexture(`http://localhost:5001${model_url}` || '/images/placeholder.png')
   return (
     <mesh>
       <planeGeometry args={[2.52, 1.62]} />
@@ -72,8 +72,8 @@ export default function ExhibitViewer ({ exhibit, onClose, onResume }) {
               <directionalLight position={[5, 8, 5]} intensity={2.5} />
               <pointLight position={[-4, -4, -4]} intensity={0.8} color='#f59e0b' />
               {exhibit.type === 'painting'
-                ? <ViewerPainting url={exhibit.url} />
-                : <ViewerObject url={exhibit.url} />}
+                ? <ViewerPainting model_url={exhibit.model_url} />
+                : <ViewerObject model_url={exhibit.model_url} />}
             </Canvas>
           </div>
 

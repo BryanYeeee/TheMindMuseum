@@ -21,7 +21,7 @@ const POS = {
 
 export const triggerData = [
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 1,
     position: positions[1],
     width: 5,
@@ -29,7 +29,7 @@ export const triggerData = [
     message: 'You are walking through the narrow corridor.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 2,
     position: positions[6],
     width: 5,
@@ -37,7 +37,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 3,
     position: positions[2],
     width: 5,
@@ -45,7 +45,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 4,
     position: positions[3],
     width: 5,
@@ -53,7 +53,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 5,
     position: positions[4],
     width: 5,
@@ -61,7 +61,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id:6,
     position: positions[5],
     width: 5,
@@ -69,7 +69,7 @@ export const triggerData = [
     message: 'fuck you.'
   },
   {
-    segmentID: 'tile-0-0',
+    segmentID: 'tile-1-0',
     id: 7,
     position: positions[7],
     width: 7,
