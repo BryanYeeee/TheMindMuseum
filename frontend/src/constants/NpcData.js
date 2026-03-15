@@ -1,7 +1,8 @@
 export const npcData = [
   {
+    segmentID: 'tile-1-0',
     url: '/models/happy_joe.fbx',
-    position: [-5, 0, -7],
+    position: [-5, 0, -7], // Keeps original relative offset
     rotation: [0, 2.5, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
@@ -9,6 +10,7 @@ export const npcData = [
     dialogue: "Ah, a visitor! Welcome to the Grand Gallery. I've been standing here for hours — these exhibits won't appreciate themselves, you know.",
   },
   {
+    segmentID: 'tile-1-0',
     url: '/models/lebron.fbx',
     position: [-9.5, 0, 1.5],
     rotation: [0, 4, 0],
@@ -18,8 +20,9 @@ export const npcData = [
     dialogue: "I'm not just here for the art. I'm here for the culture. Also, have you seen the gift shop?",
   },
   {
+    segmentID: 'tile-0-1', // Moved to the top-right segment
     url: '/models/happy_guy.fbx',
-    position: [24.5, 0, 5.5],
+    position: [5, 0, 5.5], // Adjusted X to be relative to the tile start
     rotation: [0, -1, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
@@ -27,6 +30,7 @@ export const npcData = [
     dialogue: "Incredible, isn't it? I've been coming here every weekend for the past three years. Still haven't figured out what that sculpture is supposed to mean.",
   },
   {
+    segmentID: 'tile-1-1', 
     url: '/models/happy_person.fbx',
     position: [8, 0, 5.5],
     rotation: [0, -0.5, 0],
@@ -36,6 +40,7 @@ export const npcData = [
     dialogue: "Oh! Sorry, I didn't see you there. I was just admiring the lighting in this room. Very dramatic, don't you think?",
   },
   {
+    segmentID: 'tile-2-1',
     url: '/models/yes.fbx',
     position: [12.5, 0, -1.2],
     rotation: [0, -0.5, 0],
@@ -45,6 +50,7 @@ export const npcData = [
     dialogue: "Yes, yes, excellent eye. This piece dates back to... well, I don't actually know. The placard fell off last Tuesday.",
   },
   {
+    segmentID: 'tile-2-1',
     url: '/models/talking.fbx',
     position: [12.5, 0, 1.2],
     rotation: [0, 3.5, 0],
@@ -54,8 +60,9 @@ export const npcData = [
     dialogue: "You see, the juxtaposition of form and negative space here creates a dialogue between the observer and the observed. Or maybe it's just a vase. Hard to say.",
   },
   {
+    segmentID: 'tile-3-0',
     url: '/models/jody.fbx',
-    position: [-21.5, 0, -5.5],
+    position: [-5, 0, -5.5], // Adjusted X to be local to the left-side tile
     rotation: [0, 2, 0],
     scale: 0.019,
     idleAnim: 'mixamo.com',
@@ -63,6 +70,7 @@ export const npcData = [
     dialogue: "Psst — between you and me, the best exhibit is in the back room. They keep it hidden because it's too powerful.",
   },
   {
+    segmentID: 'tile-4-1', // Placed in the entrance/bottom segment
     url: '/models/reception.fbx',
     position: [1.2, 0, -6.75],
     rotation: [0, 0, 0],

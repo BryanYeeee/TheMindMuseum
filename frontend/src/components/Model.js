@@ -5,12 +5,16 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import ObjectModel from './ObjectModel'
 import PaintingModel from './PaintingModel'
+import NPCModel from './NpcModel'
+import NPCHitbox from './NpcHitbox'
 
 export default function Model ({
   url,
   exhibits = [],
   triggers = [],
+  npcData = [],
   setDialogue,
+  setNpcDialogue,
   openExhibit,
   mirrored = true,
   ...props
@@ -84,8 +88,8 @@ export default function Model ({
         <sphereGeometry args={[0.15, 16, 16]} />
         <meshBasicMaterial color='#ff00ff' />
       </mesh>
-      <group 
-        position={[-1.4, 0, -10]} 
+      <group
+        position={[-1.4, 0, -10]}
         scale={mirrored ? [1, 1, -1] : [1, 1, 1]}
       >
         <primitive object={clonedScene} />
@@ -107,6 +111,25 @@ export default function Model ({
           <ObjectModel key={`exhibit-${index}`} {...commonProps} />
         )
       })}
+
+      {npcData.map(npc => (
+        <group key={npc.url + npc.position.join(',')}>
+          <NPCModel
+            url={npc.url}
+            position={npc.position}
+            rotation={npc.rotation}
+            scale={npc.scale}
+            idleAnim={npc.idleAnim}
+          />
+          <NPCHitbox
+            position={npc.position}
+            onDialogue={() => {
+              setNpcDialogue({ name: npc.name, text: npc.dialogue })
+              setDialogue(null)
+            }}
+          />
+        </group>
+      ))}
 
       {triggers.map(trigger => (
         <mesh key={`debug-${trigger.id}`} position={trigger.position}>

@@ -2,6 +2,7 @@
 import Model from './Model'
 import { exhibitData } from '@/constants/ExhibitData'
 import { triggerData } from '@/constants/TriggerData'
+import { npcData } from '@/constants/NpcData'
 
 const MAP = [
   // [0, 4],
@@ -38,7 +39,7 @@ const MODEL = (xIndex, zIndex) => {
   }
 }
 
-export default function Tileset ({ setDialogue, openExhibit }) {
+export default function Tileset ({ setDialogue, openExhibit, setNpcDialogue }) {
   return (
     <>
       {MAP.map((row, zIndex) =>
@@ -53,8 +54,10 @@ export default function Tileset ({ setDialogue, openExhibit }) {
               position={POSITIONS(xIndex, zIndex)[tileType]}
               rotation={ROTATIONS[tileType]}
               setDialogue={setDialogue}
+              setNpcDialogue={setNpcDialogue}
               openExhibit={openExhibit}
               mirrored={zIndex % 2 == 0}
+              npcData={npcData.filter(npc => npc.segmentID === segmentID)}
               exhibits={exhibitData.filter(ex => ex.segmentID === segmentID)}
               triggers={triggerData.filter(tr => tr.segmentID === segmentID)}
             />
