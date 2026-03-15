@@ -190,13 +190,36 @@
     )
   }
 
-  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, onResume, receptionistOpen, onCloseReceptionist, npcQuiz, onNpcQuizComplete, onCloseNpcQuiz }) {
+  export default function UI ({ lastCoords, dialogue, npcDialogue, isLocked, hasEntered, onResume, receptionistOpen, onCloseReceptionist, npcQuiz, onNpcQuizComplete, onCloseNpcQuiz }) {
     return (
       <div className='fixed inset-0 pointer-events-none select-none font-lora text-white z-50'>
         <AnimatePresence mode='sync'>
           {/* sync allows both to animate at once for a smoother transition */}
-          {/* --- THE ENTRY CURTAIN (LOCK SCREEN) --- */}
-          {!isLocked && !receptionistOpen && !npcQuiz && (
+          {/* --- FIRST ENTRY — click anywhere to begin --- */}
+          {!isLocked && !hasEntered && !receptionistOpen && !npcQuiz && (
+            <motion.div
+              key='enter-screen'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.4 } }}
+              transition={{ duration: 0.3 }}
+              onClick={onResume}
+              className='absolute inset-0 bg-[#050505]/60 backdrop-blur-sm flex items-center justify-center z-[100] pointer-events-auto cursor-pointer'
+            >
+              <div className='absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.08)_2px,rgba(0,0,0,0.08)_4px)] pointer-events-none' />
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                className='text-white/70 text-xs tracking-[0.4em] uppercase'
+              >
+                Click to Enter
+              </motion.p>
+            </motion.div>
+          )}
+
+          {/* --- PAUSE SCREEN — shown after first entry --- */}
+          {!isLocked && hasEntered && !receptionistOpen && !npcQuiz && (
             <motion.div
               key='lock-screen'
               initial={{ opacity: 0 }}
@@ -216,11 +239,8 @@
                 className='relative flex flex-col items-center w-80 gap-1'
               >
                 <div className='w-px h-16 bg-linear-to-b from-transparent to-white/40 mb-8' />
-                {/* Title */}
                 <h2 className='text-3xl text-white mb-1 tracking-[0.1em]'>The Mind Museum</h2>
                 <p className='text-white/40 text-xs tracking-[0.2em] uppercase mb-8'>— Paused —</p>
-
-                {/* Menu items */}
                 <div
                   onClick={onResume}
                   className='w-full flex items-center justify-between px-5 py-3 border border-white/10 hover:border-amber-500/60 hover:bg-white/5 transition-all cursor-pointer group'

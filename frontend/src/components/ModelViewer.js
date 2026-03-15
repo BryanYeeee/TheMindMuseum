@@ -75,6 +75,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
   const [dialogue, setDialogue] = useState(null)
   const [npcDialogue, setNpcDialogue] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
+  const [hasEntered, setHasEntered] = useState(false)
   const [exhibit, setExhibit] = useState(null)
   const [receptionistOpen, setReceptionistOpen] = useState(false)
   const [quizData, setQuizData] = useState({}) // { [npcName]: { question, answer } }
@@ -222,7 +223,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
           <PointerLockControls
             ref={controlsRef}
             enabled={!exhibit && !receptionistOpen && !npcQuiz}
-            onLock={() => setIsLocked(true)}
+            onLock={() => { setIsLocked(true); setHasEntered(true) }}
             onUnlock={() => setIsLocked(false)}
           />
           <Controller
@@ -237,6 +238,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
         dialogue={dialogue}
         npcDialogue={npcDialogue}
         isLocked={isLocked}
+        hasEntered={hasEntered}
         onResume={() => controlsRef.current?.lock()}
         receptionistOpen={receptionistOpen}
         onCloseReceptionist={() => { setReceptionistOpen(false); controlsRef.current?.lock() }}
