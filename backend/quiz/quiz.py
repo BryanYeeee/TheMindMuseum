@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer, util
 from dotenv import load_dotenv
-from utils import strip_fences
+from quiz.utils import strip_fences
 
 quiz = Blueprint("quiz", __name__)
 load_dotenv()

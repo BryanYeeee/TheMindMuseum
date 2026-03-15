@@ -8,7 +8,7 @@ from openai import OpenAI
 from railtracks.vector_stores import ChromaVectorStore, Chunk
 from sentence_transformers import SentenceTransformer
 import shutil
-from utils import generate_quiz
+from rag_agent.utils import generate_quiz
 
 rag = Blueprint("rag", __name__)
 load_dotenv()
