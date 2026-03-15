@@ -49,36 +49,54 @@ export default function LandingPage({ onStart }) {
             const { pdf_key } = uploadData;
 
             // 2. Kick off artifact design, RAG ingest, and painting design in parallel
-            const [artifactResp, ingestResp, paintingResp] = await Promise.all([
-                fetch("http://localhost:5001/artifacts/design", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        pdf_key,
-                        num_artifacts: numArtifacts,
-                    }),
-                }),
+            const promises = [
                 fetch("http://localhost:5001/agent/ingest", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ pdf_key }),
                 }),
-                fetch("http://localhost:5001/paintings/design", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        pdf_key,
-                        num_paintings: numPaintings,
-                    }),
-                }),
-            ]);
+            ];
 
-            const artifactData = await artifactResp.json();
-            await ingestResp.json();
-            const paintingData = await paintingResp.json();
+            const artifactPromise =
+                numArtifacts > 0
+                    ? fetch("http://localhost:5001/artifacts/design", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                              pdf_key,
+                              num_artifacts: numArtifacts,
+                          }),
+                      })
+                    : null;
 
-            if (artifactData.error) throw new Error(artifactData.error);
-            if (paintingData.error) throw new Error(paintingData.error);
+            const paintingPromise =
+                numPaintings > 0
+                    ? fetch("http://localhost:5001/paintings/design", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                              pdf_key,
+                              num_paintings: numPaintings,
+                          }),
+                      })
+                    : null;
+
+            if (artifactPromise) promises.push(artifactPromise);
+            if (paintingPromise) promises.push(paintingPromise);
+
+            await Promise.all(promises);
+
+            let artifactData = null;
+            let paintingData = null;
+
+            if (artifactPromise) {
+                artifactData = await (await artifactPromise).json();
+                if (artifactData.error) throw new Error(artifactData.error);
+            }
+            if (paintingPromise) {
+                paintingData = await (await paintingPromise).json();
+                if (paintingData.error) throw new Error(paintingData.error);
+            }
 
             onStart(
                 numArtifacts,
@@ -225,7 +243,7 @@ export default function LandingPage({ onStart }) {
                         <div className="flex items-center gap-3">
                             <input
                                 type="range"
-                                min="1"
+                                min="0"
                                 max="20"
                                 value={numArtifacts}
                                 onChange={(e) =>
@@ -248,7 +266,7 @@ export default function LandingPage({ onStart }) {
                         <div className="flex items-center gap-3">
                             <input
                                 type="range"
-                                min="1"
+                                min="0"
                                 max="20"
                                 value={numPaintings}
                                 onChange={(e) =>

@@ -17,6 +17,7 @@ requests==2.32.5
 
 # Image handling (used by google-genai)
 Pillow==12.1.1
+numpy
 
 # LLM client
 openai==2.28.0

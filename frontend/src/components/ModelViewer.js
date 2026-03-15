@@ -1,19 +1,26 @@
-'use client'
+"use client";
 
-import { Canvas } from '@react-three/fiber'
-import { PointerLockControls, Environment } from '@react-three/drei'
-import { Suspense, useState, useEffect, useRef } from 'react'
-import Controller from './Controller'
-import * as THREE from 'three'
-import CoordsLogger from './CoordsLogger'
-import UI from './UI'
-import TableLoader from './TableLoader'
-import ExhibitViewer from './ExhibitViewer'
-import { npcData } from '@/constants/NpcData'
-import NPCHitbox from './NpcHitbox'
-import Tileset from './TileSet'
-import MuseumLoader from './MuseumLoader'
-import { Rubik_80s_Fade } from 'next/font/google'
+import { Canvas } from "@react-three/fiber";
+import { PointerLockControls, Environment } from "@react-three/drei";
+import {
+    Suspense,
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useCallback,
+} from "react";
+import Controller from "./Controller";
+import * as THREE from "three";
+import CoordsLogger from "./CoordsLogger";
+import UI from "./UI";
+import TableLoader from "./TableLoader";
+import ExhibitViewer from "./ExhibitViewer";
+import { npcData } from "@/constants/NpcData";
+import NPCHitbox from "./NpcHitbox";
+import Tileset from "./TileSet";
+import MuseumLoader from "./MuseumLoader";
+import { Rubik_80s_Fade } from "next/font/google";
 
 // 🔴 DEBUG ONLY — DELETE AFTER TESTING
 const _debugLines = [];
@@ -61,8 +68,13 @@ export default function ModelViewer({
         _dflush();
     }, []);
 
-    const midSectionCount = Math.max(Math.ceil(numPaintings/8), Math.ceil(Math.min(1, numArtifacts) / 6));
-    console.log(`Calculated midSectionCount=${midSectionCount} for numPaintings=${numPaintings} and numArtifacts=${numArtifacts}`);
+    const midSectionCount = Math.max(
+        Math.ceil(numPaintings / 8),
+        Math.ceil(Math.min(1, numArtifacts) / 6),
+    );
+    console.log(
+        `Calculated midSectionCount=${midSectionCount} for numPaintings=${numPaintings} and numArtifacts=${numArtifacts}`,
+    );
     const dynamicMap = [
         [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
@@ -172,20 +184,25 @@ export default function ModelViewer({
         // 2. Open Painting SSE Stream
         const paintingStreamUrl = `http://localhost:5001/paintings/stream/${initialPaintingData.job_id}`;
         _dlog(`SSE PAINTING CONNECTING: ${paintingStreamUrl}`);
-        
+
         const eventSource = new EventSource(paintingStreamUrl);
 
         eventSource.addEventListener("painting_update", (event) => {
             const updatedPainting = JSON.parse(event.data);
-            
+
             setLivePaintings((prev) => {
-                const paintingIndex = prev.findIndex((p) => p.id === updatedPainting.id);
-                
+                const paintingIndex = prev.findIndex(
+                    (p) => p.id === updatedPainting.id,
+                );
+
                 if (paintingIndex === -1) return prev;
 
-                const { segmentID, position, posKey } = getPlacementPainting(paintingIndex);
+                const { segmentID, position, posKey } =
+                    getPlacementPainting(paintingIndex);
 
-                _dlog(`SSE painting_update id=${updatedPainting.id} status=${updatedPainting.status}`);
+                _dlog(
+                    `SSE painting_update id=${updatedPainting.id} status=${updatedPainting.status}`,
+                );
                 _dflush();
 
                 return prev.map((p, i) =>
@@ -199,7 +216,7 @@ export default function ModelViewer({
                               isLive: true,
                               type: "painting",
                           }
-                        : p
+                        : p,
                 );
             });
         });
@@ -276,6 +293,18 @@ export default function ModelViewer({
         }
     }, [npcDialogue]);
 
+    // Memoize combined exhibits so Tileset doesn't get a new array ref every render
+    const allExhibits = useMemo(
+        () => [...liveExhibits, ...livePaintings],
+        [liveExhibits, livePaintings],
+    );
+
+    // Stable callback so tile children don't re-render on unrelated state changes
+    const stableSetDialogue = useCallback((msg) => {
+        setDialogue(msg);
+        if (msg) setNpcDialogue(null);
+    }, []);
+
     const handleNpcClick = async (npc) => {
         if (npc.name === "Receptionist") {
             setNpcDialogue(null);
@@ -286,15 +315,27 @@ export default function ModelViewer({
             setNpcDialogue({ name: npc.name, loading: true });
             setDialogue(null);
             try {
-                const res = await fetch(`http://localhost:5001/quiz/question/${npc.index ?? 0}`);
+                const res = await fetch(
+                    `http://localhost:5001/quiz/question/${npc.index ?? 0}`,
+                );
                 const data = await res.json();
                 if (data.question) {
-                    setNpcDialogue({ name: npc.name, question: data.question, sampleAnswer: data.answer });
+                    setNpcDialogue({
+                        name: npc.name,
+                        question: data.question,
+                        sampleAnswer: data.answer,
+                    });
                 } else {
-                    setNpcDialogue({ name: npc.name, text: npc.text || npc.dialogue || "Hello there!" });
+                    setNpcDialogue({
+                        name: npc.name,
+                        text: npc.text || npc.dialogue || "Hello there!",
+                    });
                 }
             } catch {
-                setNpcDialogue({ name: npc.name, text: npc.text || npc.dialogue || "Hello there!" });
+                setNpcDialogue({
+                    name: npc.name,
+                    text: npc.text || npc.dialogue || "Hello there!",
+                });
             }
         }
     };
@@ -326,12 +367,9 @@ export default function ModelViewer({
 
                     <Tileset
                         map={dynamicMap}
-                        setDialogue={(msg) => {
-                            setDialogue(msg);
-                            if (msg) setNpcDialogue(null);
-                        }}
+                        setDialogue={stableSetDialogue}
                         setNpcDialogue={handleNpcClick}
-                        liveExhibits={[...liveExhibits, ...livePaintings]}
+                        liveExhibits={allExhibits}
                         openExhibit={openExhibit}
                     />
 
@@ -341,10 +379,7 @@ export default function ModelViewer({
                                 lastCoords
                                     .replace("position={", "")
                                     .replace("}", ""),
-                            )}>
-                            <sphereGeometry args={[0.1, 16, 16]} />
-                            <meshBasicMaterial color="red" />
-                        </mesh>
+                            )}></mesh>
                     )}
 
                     <TableLoader
@@ -360,7 +395,12 @@ export default function ModelViewer({
                         onUnlock={() => setIsLocked(false)}
                     />
                     <Controller
-                        isLocked={isLocked && !exhibit && !receptionistOpen && !npcDialogue}
+                        isLocked={
+                            isLocked &&
+                            !exhibit &&
+                            !receptionistOpen &&
+                            !npcDialogue
+                        }
                         npcPositions={npcData.map((n) => n.position)}
                     />
                     <CoordsLogger onHit={setLastCoords} />
@@ -387,32 +427,32 @@ export default function ModelViewer({
     );
 }
 
-const getPlacement = index => {
-  const spots = [1, 6, 7] // The specific POS keys you requested
-  const spotsPerTile = spots.length
+const getPlacement = (index) => {
+    const spots = [1, 6, 7]; // The specific POS keys you requested
+    const spotsPerTile = spots.length;
 
-  // Determine which middle row/column it belongs to
-  const tileIndex = Math.floor(index / spotsPerTile)
-  const z = Math.floor(tileIndex / 2) + 1 // Start from row 1
-  const x = tileIndex % 2 // Alternates between 0 and 1
+    // Determine which middle row/column it belongs to
+    const tileIndex = Math.floor(index / spotsPerTile);
+    const z = Math.floor(tileIndex / 2) + 1; // Start from row 1
+    const x = tileIndex % 2; // Alternates between 0 and 1
 
-  const segmentID = `tile-${z}-${x}`
-  const posKey = spots[index % spotsPerTile]
+    const segmentID = `tile-${z}-${x}`;
+    const posKey = spots[index % spotsPerTile];
 
-  return { segmentID, position: EXHIBIT_POS[posKey], posKey }
-}
+    return { segmentID, position: EXHIBIT_POS[posKey], posKey };
+};
 
-const getPlacementPainting = index => {
-  const spots = [2, 3, 4, 5] // The specific POS keys you requested
-  const spotsPerTile = spots.length
+const getPlacementPainting = (index) => {
+    const spots = [2, 3, 4, 5]; // The specific POS keys you requested
+    const spotsPerTile = spots.length;
 
-  // Determine which middle row/column it belongs to
-  const tileIndex = Math.floor(index / spotsPerTile)
-  const z = Math.floor(tileIndex / 2) + 1 // Start from row 1
-  const x = tileIndex % 2 // Alternates between 0 and 1
+    // Determine which middle row/column it belongs to
+    const tileIndex = Math.floor(index / spotsPerTile);
+    const z = Math.floor(tileIndex / 2) + 1; // Start from row 1
+    const x = tileIndex % 2; // Alternates between 0 and 1
 
-  const segmentID = `tile-${z}-${x}`
-  const posKey = spots[index % spotsPerTile]
+    const segmentID = `tile-${z}-${x}`;
+    const posKey = spots[index % spotsPerTile];
 
-  return { segmentID, position: EXHIBIT_POS[posKey], posKey }
-}
+    return { segmentID, position: EXHIBIT_POS[posKey], posKey };
+};

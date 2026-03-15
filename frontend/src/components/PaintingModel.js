@@ -1,11 +1,11 @@
 "use client";
 import { useTexture } from "@react-three/drei";
-import { useState } from "react";
+import { memo, useState } from "react";
 import * as THREE from "three";
 
 const BASE_URL = "http://localhost:5001";
 
-export default function PaintingModel({
+export default memo(function PaintingModel({
     image_url,
     position,
     rotation,
@@ -17,6 +17,14 @@ export default function PaintingModel({
         : "/images/placeholder.png";
     const texture = useTexture(fullUrl);
     const [hovered, setHovered] = useState(false);
+
+    // Ensure the texture stretches to fill the entire plane with no repeat/offset issues
+    if (texture) {
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.minFilter = THREE.LinearFilter;
+        texture.needsUpdate = true;
+    }
 
     const width = 2.8;
     const height = 1.8;
@@ -38,19 +46,19 @@ export default function PaintingModel({
                     <meshStandardMaterial color="#0a0a0a" />
                 </mesh>
 
-                {/* FRONT Image (facing Z+) */}
-                <mesh scale={scale} position={[0, 0, 0.016]}>
+                {/* FRONT Image (facing Z+) — slight overscale hides any sub-pixel seam */}
+                <mesh scale={scale * 1.01} position={[0, 0, 0.016]}>
                     <planeGeometry args={[width, height]} />
-                    <meshStandardMaterial map={texture} transparent />
+                    <meshStandardMaterial map={texture} />
                 </mesh>
 
                 {/* BACK Image (facing Z-) */}
                 <mesh
-                    scale={scale}
+                    scale={scale * 1.01}
                     position={[0, 0, -0.016]}
                     rotation={[0, Math.PI, 0]}>
                     <planeGeometry args={[width, height]} />
-                    <meshStandardMaterial map={texture} transparent />
+                    <meshStandardMaterial map={texture} />
                 </mesh>
 
                 {/* Gallery Light (Relative to center of art) */}
@@ -77,4 +85,4 @@ export default function PaintingModel({
             </group>
         </group>
     );
-}
+});

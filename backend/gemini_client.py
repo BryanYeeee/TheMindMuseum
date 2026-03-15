@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import io
 import logging
 import os
 import uuid
+
+from PIL import Image as PILImage
 
 from google import genai
 from google.genai import types
@@ -199,13 +202,74 @@ def generate_artifact_image(visual_description: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 PAINTING_IMAGE_PROMPT = (
-    "Generate a flat 2D image artwork viewed straight-on. The artwork MUST fill "
-    "the entire image edge-to-edge with absolutely no border, margin, frame, "
+    "Generate a flat 2D artwork in LANDSCAPE orientation (wider than tall, "
+    "approximately 14:9 aspect ratio). The image MUST fill "
+    "the entire frame edge-to-edge with absolutely no border, margin, "
     "mat, wall, shadow, or any surrounding context visible. Do NOT render "
     "the artwork hanging on a wall or sitting on an easel — produce ONLY "
-    "the artwork itself"
+    "the artwork itself as if scanned from a canvas. "
     "The artwork: {description}"
 )
+
+
+def _trim_whitespace_borders(img: PILImage.Image, threshold: int = 240) -> PILImage.Image:
+    """Remove near-white (or near-black) borders from an image.
+
+    Scans inward from each edge and crops away rows/columns whose average
+    brightness is above *threshold* (white border) or below 255-threshold
+    (black border).  Returns the trimmed image, or the original if no
+    significant border is found.
+    """
+    import numpy as np
+
+    arr = np.array(img.convert("RGB"), dtype=np.float32)
+    row_mean = arr.mean(axis=(1, 2))  # per-row average brightness
+    col_mean = arr.mean(axis=(0, 2))  # per-col average brightness
+
+    def _content_range(means, length):
+        lo, hi = 0, length - 1
+        while lo < length and (means[lo] > threshold or means[lo] < (255 - threshold)):
+            lo += 1
+        while hi > lo and (means[hi] > threshold or means[hi] < (255 - threshold)):
+            hi -= 1
+        return lo, hi
+
+    top, bottom = _content_range(row_mean, len(row_mean))
+    left, right = _content_range(col_mean, len(col_mean))
+
+    # Only crop if we'd keep at least 85 % of each dimension (guard against
+    # over-aggressive trimming on mostly-white artwork).
+    h, w = arr.shape[:2]
+    if (bottom - top + 1) < 0.85 * h or (right - left + 1) < 0.85 * w:
+        return img
+
+    return img.crop((left, top, right + 1, bottom + 1))
+
+
+def _crop_to_14_9(image_bytes: bytes) -> bytes:
+    """Trim whitespace borders then centre-crop to exactly 14:9."""
+    img = PILImage.open(io.BytesIO(image_bytes))
+
+    # Step 1: Remove any near-white / near-black borders the model produced
+    img = _trim_whitespace_borders(img)
+
+    # Step 2: Centre-crop to 14:9
+    w, h = img.size
+    target_ratio = 14 / 9
+    current_ratio = w / h
+
+    if current_ratio > target_ratio:
+        new_w = int(h * target_ratio)
+        left = (w - new_w) // 2
+        img = img.crop((left, 0, left + new_w, h))
+    elif current_ratio < target_ratio:
+        new_h = int(w / target_ratio)
+        top = (h - new_h) // 2
+        img = img.crop((0, top, w, top + new_h))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 def generate_painting_image(visual_description: str) -> bytes:
@@ -220,9 +284,11 @@ def generate_painting_image(visual_description: str) -> bytes:
             config=types.GenerateImagesConfig(
                 number_of_images=1,
                 output_mime_type="image/png",
+                aspect_ratio="16:9",
             ),
         )
         image_bytes: bytes = result.generated_images[0].image.image_bytes
+        image_bytes = _crop_to_14_9(image_bytes)
         logger.info("Painting image generated via Imagen 4 (%d bytes)", len(image_bytes))
         return image_bytes
 
@@ -239,11 +305,12 @@ def generate_painting_image(visual_description: str) -> bytes:
 
     for part in response.candidates[0].content.parts:
         if part.inline_data and part.inline_data.data:
+            cropped = _crop_to_14_9(part.inline_data.data)
             logger.info(
                 "Painting image generated via Gemini Flash (%d bytes, %s)",
-                len(part.inline_data.data),
+                len(cropped),
                 part.inline_data.mime_type,
             )
-            return part.inline_data.data
+            return cropped
 
     raise RuntimeError("Neither Imagen 4 nor Gemini Flash produced a painting image")
