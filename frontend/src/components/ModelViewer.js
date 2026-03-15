@@ -268,15 +268,33 @@ export default function ModelViewer({
         if (!isLocked && !receptionistOpen) setNpcDialogue(null);
     }, [isLocked, receptionistOpen]);
 
-    const handleNpcClick = (npc) => {
+    // Freeze camera look when NPC dialogue is open
+    useEffect(() => {
+        if (controlsRef.current) {
+            controlsRef.current.enabled = !npcDialogue;
+        }
+    }, [npcDialogue]);
+
+    const handleNpcClick = async (npc) => {
         if (npc.name === "Receptionist") {
             setNpcDialogue(null);
             setDialogue(null);
             setReceptionistOpen(true);
             controlsRef.current?.unlock();
         } else {
-            setNpcDialogue({ name: npc.name, text: npc.dialogue });
+            setNpcDialogue({ name: npc.name, loading: true });
             setDialogue(null);
+            try {
+                const res = await fetch(`http://localhost:5001/quiz/question/${npc.index ?? 0}`);
+                const data = await res.json();
+                if (data.question) {
+                    setNpcDialogue({ name: npc.name, question: data.question, sampleAnswer: data.answer });
+                } else {
+                    setNpcDialogue({ name: npc.name, text: npc.text || npc.dialogue || "Hello there!" });
+                }
+            } catch {
+                setNpcDialogue({ name: npc.name, text: npc.text || npc.dialogue || "Hello there!" });
+            }
         }
     };
 
@@ -341,7 +359,7 @@ export default function ModelViewer({
                         onUnlock={() => setIsLocked(false)}
                     />
                     <Controller
-                        isLocked={isLocked && !exhibit && !receptionistOpen}
+                        isLocked={isLocked && !exhibit && !receptionistOpen && !npcDialogue}
                         npcPositions={npcData.map((n) => n.position)}
                     />
                     <CoordsLogger onHit={setLastCoords} />

@@ -233,7 +233,7 @@ def ingest():
         chunks = pdf_to_chunks(tmp_path, file.filename)
         ids = store.upsert(chunks)
         print("loaded")
-        quiz_data = generate_quiz(store, count=5)
+        quiz_data = generate_quiz(store, count=12)
         print("sending quiz")
         return jsonify({"success": True, "source": pdf_key, "chunks": len(ids), "quiz": quiz_data})
     except Exception as e:

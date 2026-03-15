@@ -138,6 +138,7 @@ export default function Model({
                             setNpcDialogue({
                                 name: npc.name,
                                 text: npc.dialogue,
+                                index,
                             });
                             setDialogue(null);
                         }}
