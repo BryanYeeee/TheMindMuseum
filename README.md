@@ -22,6 +22,8 @@ Users can explore the museum, click on artifacts to learn about concepts, ask th
 
 **Text Processing** — Users upload a PDF or enter a topic. The backend extracts text, embeds it with a sentence transformer, and stores it in a vector database for semantic search. A large language model designs the artifacts and paintings, while a separate LLM powers RAG-based question answering and quiz generation.
 
+### Built with Railtracks!!!
+
 **3D Model Generation** — Each artifact's visual description is used to generate a reference image, which is then converted into a 3D `.glb` model using Hunyuan3D-2.1 deployed on a Vast.ai GPU instance. The backend communicates with the remote GPU server via a REST API exposed through a Cloudflare tunnel. See [vast-ai/README.md](vast-ai/README.md) for the full deployment guide.
 
 **3D Environment** — The museum is rendered in the browser using Three.js with React Three Fiber. Users walk through with first-person controls, interacting with 3D museum models and animated NPC characters.
@@ -30,28 +32,6 @@ Users can explore the museum, click on artifacts to learn about concepts, ask th
 
 **Infrastructure** — The system is containerized with Docker Compose, orchestrating the Next.js frontend, Flask backend, and a debug client.
 
-## Challenges We Ran Into
-
-**Translating abstract concepts into visual exhibits** — There's no obvious mapping between "gradient descent" and a 3D object. We designed prompts where the language model generates artifacts that symbolically represent ideas, paired with interactive explanations for context.
-
-**Connecting AI generation with real-time 3D** — Artifact generation, world design, and quiz creation all happen asynchronously. We implemented SSE streaming and careful state management to keep the experience responsive as content arrives.
-
-**Building a fully interactive 3D web experience** — Navigation, pointer lock controls, object interaction, and NPC dialogue all had to work seamlessly in the browser while maintaining performance.
-
-## Accomplishments We're Proud Of
-
-We built an **end-to-end pipeline** in 36 hours — from PDF upload to a fully explorable 3D museum with AI-generated artifacts, paintings, quiz NPCs, and a RAG-powered receptionist. We successfully combined **language models, image generation, 3D model generation, vector search, and real-time 3D rendering** into a single cohesive experience.
-
-## What We Learned
-
-We learned how to build **3D web experiences** with Three.js and React Three Fiber — managing scene composition, camera movement, and interactions while maintaining performance. We also gained experience **designing AI pipelines for real-time UIs**, coordinating PDF extraction, embeddings, vector search, and multiple LLM calls to drive dynamic 3D world creation.
-
-## What's Next
-
-- **Richer exhibits** — Dynamic visualizations and simulations instead of static artifacts (interactive physics experiments, animated biology processes, live algorithm visualizations)
-- **Broader input support** — Lecture slides, textbooks, and full course imports to generate museums representing an entire subject
-- **Faster generation** — More capable models and stronger compute for near-real-time museum creation
-
 ---
 
 ## Architecture
@@ -59,8 +39,8 @@ We learned how to build **3D web experiences** with Three.js and React Three Fib
 ```
     Browser (:3000)                    Flask Backend (:5001)
   ┌─────────────────┐              ┌──────────────────────────┐
-  │  Next.js + React │──  REST  ──►│ PDF parsing & extraction │
-  │  Three.js Museum │◄── SSE  ───│ LLM design (artifacts)   │
+  │  Next.js + React│──  REST  ──► │ PDF parsing & extraction │
+  │  Three.js Museum│◄── SSE  ───  │ LLM design (artifacts)   │
   └─────────────────┘              │ Image generation         │
                                    │ 3D model generation ─────┼──► Hunyuan3D (Vast.ai GPU)
   Debug Client (:3001)             │ Vector DB + RAG (Q&A)    │
