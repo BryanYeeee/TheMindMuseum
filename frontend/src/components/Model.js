@@ -80,14 +80,6 @@ export default function Model({
 
     return (
         <group ref={groupRef} {...props}>
-            <mesh position={[0, 0, 0]}>
-                <sphereGeometry args={[0.15, 16, 16]} />
-                <meshBasicMaterial color="#ff00ff" />
-            </mesh>
-            <mesh position={[-34.5, 0, 0]}>
-                <sphereGeometry args={[0.15, 16, 16]} />
-                <meshBasicMaterial color="#ff00ff" />
-            </mesh>
             <group
                 position={[-1.4, 0, -10]}
                 scale={mirrored ? [1, 1, -1] : [1, 1, 1]}>

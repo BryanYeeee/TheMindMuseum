@@ -293,6 +293,18 @@ export default function ModelViewer({
         }
     }, [npcDialogue]);
 
+    // Memoize combined exhibits so Tileset doesn't get a new array ref every render
+    const allExhibits = useMemo(
+        () => [...liveExhibits, ...livePaintings],
+        [liveExhibits, livePaintings],
+    );
+
+    // Stable callback so tile children don't re-render on unrelated state changes
+    const stableSetDialogue = useCallback((msg) => {
+        setDialogue(msg);
+        if (msg) setNpcDialogue(null);
+    }, []);
+
     const handleNpcClick = async (npc) => {
         if (npc.name === "Receptionist") {
             setNpcDialogue(null);
@@ -367,10 +379,7 @@ export default function ModelViewer({
                                 lastCoords
                                     .replace("position={", "")
                                     .replace("}", ""),
-                            )}>
-                            <sphereGeometry args={[0.1, 16, 16]} />
-                            <meshBasicMaterial color="red" />
-                        </mesh>
+                            )}></mesh>
                     )}
 
                     <TableLoader

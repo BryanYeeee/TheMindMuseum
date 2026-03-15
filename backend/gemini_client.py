@@ -212,20 +212,57 @@ PAINTING_IMAGE_PROMPT = (
 )
 
 
+def _trim_whitespace_borders(img: PILImage.Image, threshold: int = 240) -> PILImage.Image:
+    """Remove near-white (or near-black) borders from an image.
+
+    Scans inward from each edge and crops away rows/columns whose average
+    brightness is above *threshold* (white border) or below 255-threshold
+    (black border).  Returns the trimmed image, or the original if no
+    significant border is found.
+    """
+    import numpy as np
+
+    arr = np.array(img.convert("RGB"), dtype=np.float32)
+    row_mean = arr.mean(axis=(1, 2))  # per-row average brightness
+    col_mean = arr.mean(axis=(0, 2))  # per-col average brightness
+
+    def _content_range(means, length):
+        lo, hi = 0, length - 1
+        while lo < length and (means[lo] > threshold or means[lo] < (255 - threshold)):
+            lo += 1
+        while hi > lo and (means[hi] > threshold or means[hi] < (255 - threshold)):
+            hi -= 1
+        return lo, hi
+
+    top, bottom = _content_range(row_mean, len(row_mean))
+    left, right = _content_range(col_mean, len(col_mean))
+
+    # Only crop if we'd keep at least 85 % of each dimension (guard against
+    # over-aggressive trimming on mostly-white artwork).
+    h, w = arr.shape[:2]
+    if (bottom - top + 1) < 0.85 * h or (right - left + 1) < 0.85 * w:
+        return img
+
+    return img.crop((left, top, right + 1, bottom + 1))
+
+
 def _crop_to_14_9(image_bytes: bytes) -> bytes:
-    """Centre-crop raw PNG bytes to exactly 14:9 aspect ratio."""
+    """Trim whitespace borders then centre-crop to exactly 14:9."""
     img = PILImage.open(io.BytesIO(image_bytes))
+
+    # Step 1: Remove any near-white / near-black borders the model produced
+    img = _trim_whitespace_borders(img)
+
+    # Step 2: Centre-crop to 14:9
     w, h = img.size
     target_ratio = 14 / 9
     current_ratio = w / h
 
     if current_ratio > target_ratio:
-        # Too wide — trim sides
         new_w = int(h * target_ratio)
         left = (w - new_w) // 2
         img = img.crop((left, 0, left + new_w, h))
     elif current_ratio < target_ratio:
-        # Too tall — trim top/bottom
         new_h = int(w / target_ratio)
         top = (h - new_h) // 2
         img = img.crop((0, top, w, top + new_h))
