@@ -132,25 +132,25 @@ export default function Model ({
         </group>
       ))}
 
-      {/* {triggers.map(trigger => (
-        <mesh key={`debug-${trigger.id}`} position={trigger.position}>
-          <boxGeometry
-            args={[
-              trigger.width || trigger.radius * 2,
-              trigger.height || 4, // Visual height
-              trigger.depth || trigger.radius * 2
-            ]}
-          />
-          <meshBasicMaterial
-            color='#00ffff'
-            transparent={true}
-            opacity={0.5}
-            depthWrite={false}
-            depthTest={true}
-            renderOrder={10}
-          />
-        </mesh>
-      ))} */}
+        {/* {triggers.map(trigger => (
+          <mesh key={`debug-${trigger.id}`} position={trigger.position}>
+            <boxGeometry
+              args={[
+                trigger.width || trigger.radius * 2,
+                trigger.height || 4, // Visual height
+                trigger.depth || trigger.radius * 2
+              ]}
+            />
+            <meshBasicMaterial
+              color='#00ffff'
+              transparent={true}
+              opacity={0.5}
+              depthWrite={false}
+              depthTest={true}
+              renderOrder={10}
+            />
+          </mesh>
+        ))} */}
     </group>
   )
 }
