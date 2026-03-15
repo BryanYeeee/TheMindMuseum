@@ -148,7 +148,7 @@ def design_paintings(text: str, num_paintings: int) -> list[PaintingResult]:
 
 IMAGE_PROMPT = (
     "Generate a photorealistic image of a three-dimensional museum artifact "
-    "sitting on a small display podium against a clean white background. "
+    "with a clean white background. "
     "The object should have clear volume and depth, viewed at a slight "
     "three-quarter angle to showcase its 3D form. The artifact: {description}"
 )
