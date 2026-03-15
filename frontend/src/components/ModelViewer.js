@@ -4,7 +4,6 @@ import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Environment } from "@react-three/drei";
 import { Suspense, useState, useEffect, useRef } from "react";
 import Controller from "./Controller";
-import NPCModel from "./Npcmodel";
 import * as THREE from "three";
 import CoordsLogger from "./CoordsLogger";
 import UI from "./UI";
@@ -31,7 +30,7 @@ export default function ModelViewer ({ numArtifacts, numPaintings, initialArtifa
 
     const midSectionCount = Math.ceil(numArtifacts / 6);
     const dynamicMap = [
-        [0, 4], // Entrance/Top
+        // [0, 4], // Entrance/Top
         ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
         [0, 3], // Exit/Bottom
     ];

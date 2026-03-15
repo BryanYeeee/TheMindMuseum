@@ -22,6 +22,7 @@ export default function LandingPage ({ onStart }) {
       uploadForm.append('num_artifacts', numArtifacts)
       uploadForm.append('num_paintings', numPaintings)
 
+      console.log('Uploading PDF with the following data:')
       const uploadResp = await fetch('http://localhost:5001/upload', {
         method: 'POST',
         body: uploadForm

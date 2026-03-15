@@ -18,7 +18,7 @@ function ReceptionistChat({ onClose }) {
       setThinking(true)
       setResponse(null)
       try {
-        const res = await fetch('http://localhost:8000/agent/ask', {
+        const res = await fetch('http://localhost:5001/agent/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: q }),
