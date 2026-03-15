@@ -7,6 +7,7 @@ export default function LandingPage({ onStart }) {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(null)
   const [numArtifacts, setNumArtifacts] = useState(3)
+  const [numPaintings, setNumPaintings] = useState(3)
 
   const handleUpload = async (e) => {
     e.preventDefault()
@@ -17,6 +18,25 @@ export default function LandingPage({ onStart }) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('num_artifacts', numArtifacts)
+    formData.append('num_paintings', numPaintings)
+
+    
+    // try {
+    //   const response = await fetch('http://localhost:5001/agent', {
+    //     method: 'POST',
+    //     body: formData,
+    //   })
+      
+    //   const data = await response.json()
+    //   if (data.error) throw new Error(data.error)
+      
+    //   // Transitions to ModelViewer
+    //   onStart(numArtifacts, data) 
+    // } catch (err) {
+    //   console.error(err)
+    //   alert("Extraction failed. Ensure the backend is running.")
+    //   setLoading(false)
+    // }
 
     try {
       const response = await fetch('http://localhost:5001/design', {
@@ -82,6 +102,22 @@ export default function LandingPage({ onStart }) {
               max="8" 
               value={numArtifacts} 
               onChange={(e) => setNumArtifacts(parseInt(e.target.value))}
+              className="w-full accent-amber-600 bg-white/10 appearance-none h-px"
+            />
+          </div>
+
+          {/* Painting Count Slider */}
+          <div className="space-y-4">
+            <div className="flex justify-between text-[10px] uppercase tracking-widest text-white/40">
+              <span>Painting Density</span>
+              <span className="text-amber-500">{numPaintings} Units</span>
+            </div>
+            <input 
+              type="range" 
+              min="1" 
+              max="8" 
+              value={numPaintings} 
+              onChange={(e) => setNumPaintings(parseInt(e.target.value))}
               className="w-full accent-amber-600 bg-white/10 appearance-none h-px"
             />
           </div>

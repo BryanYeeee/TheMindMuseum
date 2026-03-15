@@ -25,23 +25,23 @@ const EXHIBIT_POS = {
   7: [-13.36, 1.76, -10]
 }
 
-export default function ModelViewer ({ numArtifacts, initialJobData }) {
-  const [liveExhibits, setLiveExhibits] = useState(
-    initialJobData?.artifacts || []
-  )
+export default function ModelViewer ({ numArtifacts, numPaintings, initialArtifactData, initialPaintingData }) {
+  const [liveExhibits, setLiveExhibits] = useState([])
+  const [livePaintings, setLivePaintings] = useState([])
+
 
   const midSectionCount = Math.ceil(numArtifacts / 6)
   const dynamicMap = [
-    [0, 4], // Entrance/Top
+    // [0, 4], // Entrance/Top
     ...Array(midSectionCount).fill([1, 2]), // Middle segments repeat
     [0, 3] // Exit/Bottom
   ]
 
   useEffect(() => {
-  if (!initialJobData) return;
+  if (!initialArtifactData) return;
   
   const eventSource = new EventSource(
-    `http://localhost:5001/design/stream/${initialJobData.job_id}`
+    `http://localhost:5001/design/stream/${initialArtifactData.job_id}`
   );
   eventSource.addEventListener('artifact_update', event => {
     const updatedArtifact = JSON.parse(event.data);
@@ -70,7 +70,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
   });
 
   return () => eventSource.close();
-}, [initialJobData?.job_id]);
+}, [initialArtifactData?.job_id]);
 
   const [lastCoords, setLastCoords] = useState('Click a surface to get coords')
   const [dialogue, setDialogue] = useState(null)
@@ -168,7 +168,7 @@ export default function ModelViewer ({ numArtifacts, initialJobData }) {
               if (msg) setNpcDialogue(null)
             }}
             setNpcDialogue={handleNpcClick}
-            liveExhibits={liveExhibits}
+            liveExhibits={[...liveExhibits, ...livePaintings]} // Combine artifacts and paintings for display
             openExhibit={openExhibit}
           />
 
