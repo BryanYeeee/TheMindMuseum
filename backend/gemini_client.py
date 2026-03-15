@@ -199,12 +199,12 @@ def generate_artifact_image(visual_description: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 PAINTING_IMAGE_PROMPT = (
-    "Generate a flat 2D painting viewed straight-on. The artwork MUST fill "
+    "Generate a flat 2D image artwork viewed straight-on. The artwork MUST fill "
     "the entire image edge-to-edge with absolutely no border, margin, frame, "
     "mat, wall, shadow, or any surrounding context visible. Do NOT render "
-    "the painting hanging on a wall or sitting on an easel — produce ONLY "
-    "the painted surface itself as if scanned from a canvas. "
-    "The painting: {description}"
+    "the artwork hanging on a wall or sitting on an easel — produce ONLY "
+    "the artwork itself"
+    "The artwork: {description}"
 )
 
 
